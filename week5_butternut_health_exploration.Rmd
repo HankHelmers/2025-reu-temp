@@ -1,0 +1,98 @@
+---
+title: "week5_butternut_health_exploration"
+output: 
+  html_document:
+          toc: true
+          toc_depth: 4
+date: "2025-06-24"
+---
+
+# 2025 butternut health - spatial exploration
+
+Here, I explore the 2025 butternut data, focusing on spatial aspect. 
+
+```{r message=FALSE, warning=FALSE}
+# Preparing data
+
+# Uploading libraries & datasheet
+library(tidyverse)
+library(readr)
+health_assess <- read_csv("jun_2025_butternut_health_assessment_form.csv")
+
+# Ignoring the first 17 non-standardized entries
+health_assess <- health_assess %>% slice(17:n())
+
+# Ignoring collumns we aren't going to work with
+health_assess <- health_assess %>% select(
+  -`Producing seed?`,
+  -`Roughly how many seeds are on the tree?`,
+  -`How many seed are in each bunch (average estimate)?`,
+  
+  # Collections
+  -`What did you collect?`,
+  -`If VOUCHERS were collected, how many?`,
+  -`If LEAVES were collected, how many?`,
+  -`If CUTTINGS were collected, how many?`,
+  -`If SEEDS were collected, how many?`,
+  -`If other collections were made, please describe them here including the number collected.`,
+  
+  -`How deep are the furrows in the bark?`,
+  -`What shade (from light/white to dark) is the tree bark?`,
+  
+  #Editing
+  -`Edited after field collection? (Y/N)`,
+  -`If edited, what date:`,
+  -`If edited, what:`
+  )
+
+# Renaming columns for usability
+# Percent_live_canopy
+health_assess <- health_assess %>% rename(percent_live_canopy = `Percent live canopy (estimate to the nearest 10% increment, being sure to only include live branches in assessment)\r\n\r\nNote: This is a measure of crown density. In order to estimate this, first envision the amount of canopy there would be if the tree were fully healthy. Butternuts do not typically have a tightly formed canopy even when healthy so be sure to evaluate based on branch presence and location. Then estimate what percent of the envisioned canopy is actually present. This will be your estimate of percent live canopy.`)
+
+# crown class
+health_assess <- health_assess %>% rename(crown_class = `What is the crown class of this individual?`)
+
+#base_epicormics
+health_assess <- health_assess %>% rename(base_epicormics = `Number of epicormic branches / sprouts from the base`)
+
+#trunk_epicormics
+health_assess <- health_assess %>% rename(trunk_epicormics = `Number of epicormic branches / sprouts from the trunk`)
+
+#has_canker
+health_assess <- health_assess %>% rename(has_canker = `Visible cankers?`)
+
+#has_callous
+health_assess <- health_assess %>% rename(has_callous = `If large cankers are present, are they being calloused over?`)
+
+#trunk_canker_area
+health_assess <- health_assess %>% rename(trunk_canker_area = `How much area of the trunk below first main branch is infected by canker, measured as a percentage of total trunk with cankers visible (including cankering visible underneath uplifted bark)?`)
+
+
+#girdled_circum
+health_assess <- health_assess %>% rename(girdled_circum = `At the part of the trunk that appears most girdled by canker, what portion of the circumference of the trunk is girdled?`)
+
+#base_canker_area
+health_assess <- health_assess %>% rename(base_canker_area = `How much area of the base/ root flare is infected by canker, e.g. as a percentage of root flare (up to 10 cm above soil) with cankers visible (including underneath bark)?`)
+
+#purdue_severity_based_on_canker
+health_assess <- health_assess %>% rename(purdue_severity_based_on_canker = `Assess severity of infection. Focus on the bottom 10 feet of the tree when assessing the number and size of cankers, noting that cankers can be hard to see on old trees with thick bark. CANKERS:`)
+
+#purdue_severity_based_on_canopy
+health_assess <- health_assess %>% rename(purdue_severity_based_on_canopy = `Assess severity of infection. CANOPY:`)
+```
+
+Things I am interested in
+
+
+* Create a map of trees 
+  + Manipulate the GPS data such that it can be used in those packages 
+  + Does the gps data points work? Are they numeric
+* Make maps of individuals with point scaled by size or by health score or other characters
+
+## GPS coordinate type
+Currently, the GPS coordinates are a character type which includes 'NA' 
+
+```{r}
+health_assess %>% ggplot(aes(x=`GPS location NORTH`, y=`GPS location WEST`)) + geom_point()
+```
+

@@ -1,0 +1,216 @@
+---
+title: "week4_2025_post_processing_exploration"
+output: 
+  html_document:
+          toc: true
+          toc_depth: 4
+date: "2025-06-20"
+---
+
+Here I document my initial exploration of our REU2025 butternut health assessment data from the first 4 weeks of field days. 
+
+This ended up being a discovery of the different ways that we may need to change the survey. 
+
+# Uploading 
+```{r}
+library(tidyverse)
+library(readr)
+health_assess <- read_csv("jun_2025_butternut_health_assessment_form.csv")
+#View(health_assess)
+```
+
+# Pre-processing
+```{r}
+health_assess %>% head()
+```
+
+## Ignoring the first 17 rows 
+Okay, so the first few rows are going to be ignored for this initial exploration because they are from when we were still developing the form and they don't currently reflect their values accurately in the table.
+
+So we can remove the first 17 individuals using the slice command, where n() makes sure that all other individuals are kept from its saying "keep entries 17 to end."
+```{r message=FALSE, warning=FALSE}
+health_assess <- health_assess %>% slice(17:n())
+view(health_assess)
+```
+
+This leaves data from 06-12-2025 and 06-19-2025, only.
+
+## Ignoring columns that aren't directly necessary
+Since some of the columns aren't directly necessary I am gonna ingnore some for ease of use.
+
+```{r message=FALSE, warning=FALSE}
+health_assess <- read_csv("butternut_health_assessment_form_jun_2025.csv")
+health_assess <- health_assess %>% slice(17:n())
+
+health_assess <- health_assess %>% select(
+  -`Producing seed?`,
+  -`Roughly how many seeds are on the tree?`,
+  -`How many seed are in each bunch (average estimate)?`,
+  
+  # Collections
+  -`What did you collect?`,
+  -`If VOUCHERS were collected, how many?`,
+  -`If LEAVES were collected, how many?`,
+  -`If CUTTINGS were collected, how many?`,
+  -`If SEEDS were collected, how many?`,
+  -`If other collections were made, please describe them here including the number collected.`,
+  
+  -`How deep are the furrows in the bark?`,
+  -`What shade (from light/white to dark) is the tree bark?`,
+  
+  #Editing
+  -`Edited after field collection? (Y/N)`,
+  -`If edited, what date:`,
+  -`If edited, what:`
+  )
+```
+
+
+## Renaming the important columns/variables
+Because we are using a google form, all of the column headings are named after the question text. This is one of the disadvantages of the google form; however, we can rename the columns to better utilize the data.
+
+```{r message=FALSE}
+# Note to rename columns you need to directly copy the string saved in the system. You can see these column strings using the 'names' command.
+names(health_assess)
+```
+
+
+```{r}
+
+# Percent_live_canopy
+health_assess <- health_assess %>% rename(percent_live_canopy = `Percent live canopy (estimate to the nearest 10% increment, being sure to only include live branches in assessment)\r\n\r\nNote: This is a measure of crown density. In order to estimate this, first envision the amount of canopy there would be if the tree were fully healthy. Butternuts do not typically have a tightly formed canopy even when healthy so be sure to evaluate based on branch presence and location. Then estimate what percent of the envisioned canopy is actually present. This will be your estimate of percent live canopy.`)
+
+# crown class
+health_assess <- health_assess %>% rename(crown_class = `What is the crown class of this individual?`)
+
+#base_epicormics
+health_assess <- health_assess %>% rename(base_epicormics = `Number of epicormic branches / sprouts from the base`)
+
+#trunk_epicormics
+health_assess <- health_assess %>% rename(trunk_epicormics = `Number of epicormic branches / sprouts from the trunk`)
+
+#has_canker
+health_assess <- health_assess %>% rename(has_canker = `Visible cankers?`)
+
+#has_callous
+health_assess <- health_assess %>% rename(has_callous = `If large cankers are present, are they being calloused over?`)
+
+#trunk_canker_area
+health_assess <- health_assess %>% rename(trunk_canker_area = `How much area of the trunk below first main branch is infected by canker, measured as a percentage of total trunk with cankers visible (including cankering visible underneath uplifted bark)?`)
+
+
+#girdled_circum
+health_assess <- health_assess %>% rename(girdled_circum = `At the part of the trunk that appears most girdled by canker, what portion of the circumference of the trunk is girdled?`)
+
+#base_canker_area
+health_assess <- health_assess %>% rename(base_canker_area = `How much area of the base/ root flare is infected by canker, e.g. as a percentage of root flare (up to 10 cm above soil) with cankers visible (including underneath bark)?`)
+
+#purdue_severity_based_on_canker
+health_assess <- health_assess %>% rename(purdue_severity_based_on_canker = `Assess severity of infection. Focus on the bottom 10 feet of the tree when assessing the number and size of cankers, noting that cankers can be hard to see on old trees with thick bark. CANKERS:`)
+
+#purdue_severity_based_on_canopy
+health_assess <- health_assess %>% rename(purdue_severity_based_on_canopy = `Assess severity of infection. CANOPY:`)
+
+```
+
+Now the variables read: 
+```{r}
+names(health_assess)
+```
+
+# Summary Graphs 
+
+## has_canker
+```{r}
+health_assess %>% ggplot(aes(x=has_canker)) + geom_bar()
+```
+
+## has callous
+A majority of individuals so far don't have callousing. 
+```{r}
+health_assess %>% ggplot(aes(x=has_callous)) + geom_bar()
+```
+
+## seedlings
+```{r}
+health_assess %>% ggplot(aes(x=`Is this individual a seedling?`)) + geom_bar()
+```
+
+
+## riparian or upland
+```{r}
+health_assess %>% ggplot(aes(x=`Riparian or upland?`)) + geom_bar()
+```
+
+## densiometer
+```{r}
+select(health_assess, North)
+```
+
+
+
+
+# Displays of how the variables need to updated
+
+## Changes impacting survey
+### DBH needs to be standardized with numbers
+
+```{r}
+health_assess %>% ggplot(aes(x=`DBH (in CENTIMETERS)`)) + geom_bar()
+```
+
+### Plant height also needs to be standarized-- perhaps into inches? 
+
+Right now I can't do a histogram because there is not a continuous variable to base it off of. 
+```{r}
+health_assess %>% ggplot(aes(x=`Plant Height (in FEET)`)) + geom_bar()
+```
+
+### Our continuous areas are string values not numbered values
+
+So, my thought is that this column needs to be standardized as a number; in the future form this could look like making the form a number only input.
+
+#### trunk_canker_area
+
+```{r}
+health_assess %>% ggplot(aes(x=trunk_canker_area)) + geom_bar()
+```
+
+Right now it is ordering the categories by the character not the number.
+```{r}
+health_assess <- health_assess %>%
+  mutate(trunk_canker_area = fct_reorder(trunk_canker_area, trunk_canker_area, .desc = TRUE))
+
+health_assess %>% ggplot(aes(x=trunk_canker_area)) + geom_bar()
+```
+
+```{r}
+health_assess %>% select(trunk_canker_area)
+```
+
+#### girdled_circum  
+
+```{r}
+health_assess %>% ggplot(aes(x=girdled_circum)) + geom_bar()
+```
+```{r}
+health_assess %>% select(girdled_circum)
+```
+
+
+#### base_canker_area
+
+```{r}
+health_assess %>% ggplot(aes(x=base_canker_area)) + geom_bar()
+```
+```{r}
+health_assess %>% select(base_canker_area)
+```
+
+
+## Formatting changes
+### Canker severity numbers need to be mapped to categories with shorter names(just include the numbers)
+```{r}
+health_assess %>% ggplot(aes(x=purdue_severity_based_on_canker)) + geom_bar()
+```
+

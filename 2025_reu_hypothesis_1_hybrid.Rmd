@@ -1,0 +1,15 @@
+---
+title: "2025_reu_hypothesis_1_hybrid"
+output: 
+  html_document:
+          toc: true
+          toc_depth: 4
+date: "2025-07-15"
+---
+
+## Hypothesis 1: Hybrid individuals, as detected using both DNA and morphology, will have better health metrics (as measured by variables listed above) than true butternuts
+
+```{r}
+# (analysis)
+```
+

@@ -1,0 +1,286 @@
+---
+title: "2025_reu_hypothesis_2_dbh"
+output: 
+  html_document:
+          toc: true
+          toc_depth: 4
+date: "2025-07-15"
+---
+
+
+# Hypothesis 2: Higher DBH will be correlated with a higher percentage of canker on the trunk and base
+* Variables: DBH→ canker_area_base/trunk
+* Mechanism: a large, healthy tree might fight off the canker for longer amount of time while small trees are the opposite
+
+# Data Import
+## Importing 2024 & 2025 Data
+See the full code for the break down for the importing and cleaning open the documents of the same name. 
+
+### Create the R files if needed. 
+First, I need to retrieve only the R code from the cleaning files. These files also include text descriptions of what cleaning is done, which is not needed for importing the code to do the data cleaning here. 
+```{r EVAL=FALSE, IGNORE=TRUE}
+# purl("G:/My Drive/1 Projects/REU2425 - Morton Arboretum/R/REU2025-data-exploration/week8_cleaning_2024_health_form_data.Rmd")
+# 
+# purl("G:/My Drive/1 Projects/REU2425 - Morton Arboretum/R/REU2025-data-exploration/week8_cleaning_2025_health_form_data.Rmd")
+```
+
+
+### Run the R files to get cleaned data
+Next, we can run those extracted R files to actually import and clean the data. 
+```{r message=FALSE, warning=FALSE}
+## 2024 data
+source("G:/My Drive/1 Projects/REU2425 - Morton Arboretum/R/REU2025-data-exploration/week8_cleaning_2024_health_form_data.R")
+
+## 2025 data
+source("G:/My Drive/1 Projects/REU2425 - Morton Arboretum/R/REU2025-data-exploration/week8_cleaning_2025_health_form_data.R")
+```
+
+
+# Setup of Analysis
+
+This chunk defines a re-usable function to run a regression across multiple input datas. 
+
+```{r define_hypoth2_analysis}
+do_hypoth2_analysis <- function(data, predictor, response, xlabel, ylabel, color = "black") {
+  # Define linear model
+  model <- lm(reformulate(predictor, response), data = data)
+  coefs <- coef(model)
+  r_squared <- summary(model)$r.squared
+  
+  # Create equation and R^2 text
+  equation <- paste0("y = ", round(coefs[2], 2), "x + ", round(coefs[1], 2))
+  r2_text <- paste0("italic(R)^2 == ", round(r_squared, 4))
+  
+  # Get plotting ranges
+  max_x <- max(data[[predictor]], na.rm = TRUE)
+  
+  max_y <- max(data[[response]], na.rm = TRUE)
+  min_y <- min(data[[response]], na.rm = TRUE)
+  range_y <- max_y - min_y
+  
+  # Annotate sample size near the bottom-right
+  sample_size_y_position <- min_y + 0.08 * range_y
+  
+  # Annotate equation and r2 near the top-right
+  eq_y_position <- max_y - 0.05 * range_y
+  r2_y_position <- max_y - 0.12 * range_y
+  
+  # PLOT ------------------------------------------------------
+  ggplot(data, aes_string(x = predictor, y = response)) +
+    # Points
+    geom_point(color = color) +
+    
+    # Line of best fit
+    geom_smooth(method = "lm", color = color) +
+    
+    # Axes Label & Theme
+    labs(x = xlabel, y = ylabel) +  # Set the y-axis label
+    theme(
+      axis.title.y = element_text(color = color) # Change y-axis label color
+    ) + 
+    
+    # Samples size text
+    annotate(
+      "text", 
+      x = max_x,
+      y = sample_size_y_position,
+      label = paste("n = ", count(data)),
+      hjust = 1,
+      size = 6,
+      color = "black"
+    ) +
+    
+    # Equation and R^2 text
+    annotate(
+      "text",
+      x = max_x,
+      y = eq_y_position,
+      label = equation,
+      hjust = 1,
+      size = 4,
+      color = color
+    ) +
+    annotate(
+      "text",
+      x = max_x,
+      y = r2_y_position,
+      label = r2_text,
+      hjust = 1,
+      size = 4,
+      color = color,
+      parse = TRUE # Ensures that italics styling works
+    )
+}
+```
+
+
+# Data Analysis
+Here are the major delinations of questions across this hypotheses:
+
+* What patterns of DBH and canker areas do we see overall-- across all sites, years and age classes?
+* What patterns of DBH and canker areas do we see across years?
+* What patterns of DBH and canker areas do we see across seedlings?
+* What patterns of DBH and canker areas do we see across adults?
+* What patterns of DBH and canker areas do we see across sites?
+
+Notably: 
+* I'd like to include both base and trunk canker area on the same graph; I think that could be very nice
+
+## Patterns overall-- across all individuals (all sites, years, and age classes)
+```{r}
+
+# Combining 2024 and 2025 data along canker area & DBH
+#combined_2024_2025 <- 
+```
+
+
+
+## Patterns across years
+### Patterns across 2025
+```{r run_2025_analysis, message=FALSE, warning=FALSE}
+library(scales)
+
+hex <- hue_pal()(3)
+
+patterns_across_2025_base <- do_hypoth2_analysis(
+  data = health_assess_2025, 
+  predictor = "dbh_cm", 
+  response = "base_canker_area",
+  xlabel = "All 2025 Individuals DBH (cm)",
+  ylabel = "% of Base Canker Area",
+  color = hex[1]
+)
+patterns_across_2025_base
+
+patterns_across_2025_trunk <- do_hypoth2_analysis(
+  data = health_assess_2025, 
+  predictor = "dbh_cm", 
+  response = "trunk_canker_area",
+  xlabel = "All 2025 Individuals DBH (cm)",
+  ylabel = "% of Trunk Canker Area",
+  color = hex[2]
+)
+patterns_across_2025_trunk
+
+patterns_across_2025_girdled <- do_hypoth2_analysis(
+  data = health_assess_2025, 
+  predictor = "dbh_cm", 
+  response = "girdled_canker_circum_2025",
+  xlabel = "All 2025 Individuals DBH (cm)",
+  ylabel = "% of Circumference Girdled",
+  color = hex[3]
+)
+patterns_across_2025_girdled
+```
+
+### Patterns across 2024
+```{r message=FALSE, warning=FALSE}
+library(scales)
+
+hex <- hue_pal()(3)
+
+patterns_across_2024_base <- do_hypoth2_analysis(
+  data = health_assess_2024, 
+  predictor = "dbh_cm", 
+  response = "base_canker_area",
+  xlabel = "All 2024 Individuals DBH (cm)",
+  ylabel = "% of Base Canker Area",
+  color = hex[1]
+)
+patterns_across_2024_base
+
+patterns_across_2024_trunk <- do_hypoth2_analysis(
+  data = health_assess_2024, 
+  predictor = "dbh_cm", 
+  response = "trunk_canker_area",
+  xlabel = "All 2024 Individuals DBH (cm)",
+  ylabel = "% of Trunk Canker Area",
+  color = hex[2]
+)
+patterns_across_2024_trunk
+```
+
+
+## Patterns across sites
+**************
+
+## Results
+### Girdled circumference: Negative correlation between DBH and % circumference girdled
+This result would indicate that younger trees have slightly higher girdling. 
+
+We may be seeing this trend due to an inaccuracy with attempting to estimate circumference on smaller trees.
+```{r message=FALSE}
+patterns_across_2025_girdled
+```
+
+### 2024 versus 2025: Appears to be an increase in DBH ~ Canker Area over 2024 and 2025.
+```{r message=FALSE}
+library(patchwork)
+
+(patterns_across_2024_base + patterns_across_2025_base) + plot_annotation("% Base Canker Area 2024 versus 2025")
+
+(patterns_across_2024_trunk + patterns_across_2025_trunk) + plot_annotation("% Trunk Canker Area 2024 versus 2025")
+```
+  
+  
+# Future work
+
+## Comparing base and trunk areas on same graph
+## Two response variables (base/trunk compared together)
+```{r eval=FALSE}
+# 
+# # This ensures adds a DBH measure to each of the canker entries, such that they can be plotted against each other. 
+# data <- health_assess_2025
+# predictor <- "dbh_cm"
+# response1 <- "base_canker_area"
+# response2 <- "trunk_canker_area"
+# 
+# long_data <- data %>%
+#   select(all_of(c(predictor, response1, response2))) %>%
+#   pivot_longer(
+#     cols = c(all_of(response1), all_of(response2)),
+#     names_to = "response_type",
+#     values_to = "response_value"
+#   )
+# 
+# # Fit models and extract stats for annotation
+# annotations <- long_data %>%
+#   group_by(response_type) %>% # Collects all of the base/trunk canker area readings together
+#   group_modify(~ {
+#     model <- lm(response_value ~ get(predictor), data = long_health_data)
+#     coefs <- coef(model)
+#     r_squared <- summary(model)$r.squared
+#     eq <- paste0("y == ", round(coefs[2], 2), " * x + ", round(coefs[1], 2))
+#     r2 <- paste0("italic(R)^2 == ", round(r_squared, 4))
+#     data.frame(equation = eq, r2 = r2)
+#   })
+# 
+# # Determine top-right positions for annotation
+#   max_x <- max(long_data[[predictor]], na.rm = TRUE)
+#   max_y <- max(long_data$response_value, na.rm = TRUE)
+#   min_y <- min(long_data$response_value, na.rm = TRUE)
+#   range_y <- max_y - min(long_data$response_value, na.rm = TRUE)
+# 
+#   # Add y positions for annotations
+#   # annotations["base_canker_area"]$eq_y <- 
+#   annotations$eq_y <- min_y + 0.05 * range_y
+#   annotations$r2_y <- min_y + 0.12 * range_y
+#   annotations$x <- max_x
+# 
+#   # Plot
+#   ggplot(long_data, aes_string(x = predictor, y = "response_value", color = "response_type")) +
+#     geom_point() +
+#     geom_smooth(method = "lm", se = FALSE) +
+#     # xlab(xlabel) +
+#     # ylab(ylabel) +
+#     # Add annotations for each response type
+#     geom_text(data = annotations,
+#               aes(x = x, y = eq_y, label = equation, color = response_type),
+#               hjust = 1, size = 4, parse = TRUE, inherit.aes = FALSE) +
+#     geom_text(data = annotations,
+#               aes(x = x, y = r2_y, label = r2, color = response_type),
+#               hjust = 1, size = 4, parse = TRUE, inherit.aes = FALSE) +
+#     theme_minimal()
+# 
+# view(annotations)
+```

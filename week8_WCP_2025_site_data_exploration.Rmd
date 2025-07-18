@@ -1,0 +1,693 @@
+---
+title: "week8_WCP_2025_site_data_exploration"
+output: 
+  html_document:
+          toc: true
+          toc_depth: 4
+date: "2025-07-17"
+---
+
+EXPLORING WCP DATA ONLY
+
+# Importing 2025 Data
+See the full code for the break down for the importing and cleaning open the documents of the same name. 
+
+## Create the R files if needed. 
+First, I need to retrieve only the R code from the cleaning files. These files also include text descriptions of what cleaning is done, which is not needed for importing the code to do the data cleaning here. 
+```{r IGNORE=TRUE}
+purl("G:/My Drive/1 Projects/REU2425 - Morton Arboretum/R/REU2025-data-exploration/week8_cleaning_2025_health_form_data.Rmd")
+```
+
+
+## Run the R files to get cleaned data
+Next, we can run those extracted R files to actually import and clean the data. 
+```{r message=FALSE, warning=FALSE}
+
+## 2025 data
+source("G:/My Drive/1 Projects/REU2425 - Morton Arboretum/R/REU2025-data-exploration/week8_cleaning_2025_health_form_data.R")
+```
+
+
+# Select only the WCP data
+```{r}
+health_assess_2025 <- health_assess_2025 %>% slice(1:66)
+```
+
+# Data exploration
+* Need to include girdled circum
+
+## Proportion of seedlings
+* NAs are from the first few days where we didn't include the seedling question yet; we could adjust these
+```{r}
+bar_seedlings <- health_assess_2025 %>% ggplot(aes(x = seedling_y_n)) +
+  geom_bar(aes(fill = seedling_y_n)) + 
+  xlab("2025 WCP Seedlings Y/N")
+
+bar_seedlings
+```
+
+## Plant Height
+** Would love to fix the seedling/adult coloring
+
+### All individual distribution
+```{r message=TRUE, warning=TRUE, paged.print=TRUE}
+library(patchwork)
+
+# Plant Height (ft)
+mean_plant_height <- mean(health_assess_2025$plant_height_ft, na.rm = TRUE)
+median_plant_height <- median(health_assess_2025$plant_height_ft, na.rm = TRUE)
+print(mean_plant_height)
+
+hist_plant_height <- health_assess_2025 %>% ggplot(aes(x = health_assess_2025$plant_height_ft)) +
+  geom_histogram(bins = 30, aes(fill = seedling_y_n)) +
+  xlab("2025 WCP All Individuals")
+  ylab("Number of Individuals") +
+  # Mean
+  geom_vline(
+    aes(xintercept = mean_plant_height),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 17,
+           y = 15,
+           label = paste("Mean =", round(mean_plant_height, 2), "ft")) +
+
+  # Median
+  geom_vline(
+    aes(xintercept = median_plant_height),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 11,
+           y = 20,
+           label = paste("Median =", round(median_plant_height, 2), "ft")) 
+
+  hist_plant_height
+```
+
+### Seedling subset
+```{r message=TRUE, warning=TRUE, paged.print=TRUE}
+seedlings_2025 <- health_assess_2025 %>% filter(is.na(dbh_cm))
+
+
+# Plant Height (ft)
+mean_plant_height <- mean(seedlings_2025$plant_height_ft, na.rm = TRUE)
+median_plant_height <- median(seedlings_2025$plant_height_ft, na.rm = TRUE)
+print(mean_plant_height)
+hist_plant_height_seedling <- seedlings_2025 %>% ggplot(aes(x = plant_height_ft)) +
+  geom_histogram(bins = 30, aes(fill = seedling_y_n)) +
+  xlab("2025 WCP Seedling Height (ft)")
+  ylab("Number of Individuals") +
+  # Mean
+  geom_vline(
+    aes(xintercept = mean_plant_height),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 3.5,
+           y = 5,
+           label = paste("Mean =", round(mean_plant_height, 2), "ft")) +
+
+  # Median
+  geom_vline(
+    aes(xintercept = median_plant_height),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 3,
+           y = 5,
+           label = paste("Median =", round(median_plant_height, 2), "ft"))
+hist_plant_height_seedling
+```
+
+
+### Adult subset
+```{r message=TRUE, warning=TRUE, paged.print=TRUE}
+adult_2025 <- health_assess_2025 %>% filter(is.na(dbh_cm))
+
+
+# Plant Height (ft)
+mean_plant_height <- mean(adult_2025$plant_height_ft, na.rm = TRUE)
+median_plant_height <- median(adult_2025$plant_height_ft, na.rm = TRUE)
+print(mean_plant_height)
+
+
+hist_plant_height_adult <- adult_2025 %>% ggplot(aes(x = plant_height_ft)) +
+  geom_histogram(bins = 30, aes(fill = seedling_y_n)) +
+  xlab("2025 WCP Adult Height (ft)")
+  ylab("Number of Individuals") +
+  # Mean
+  geom_vline(
+    aes(xintercept = mean_plant_height),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 3.5,
+           y = 5,
+           label = paste("Mean =", round(mean_plant_height, 2), "ft")) +
+
+  # Median
+  geom_vline(
+    aes(xintercept = median_plant_height),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 3,
+           y = 5,
+           label = paste("Median =", round(median_plant_height, 2), "ft"))
+hist_plant_height_adult
+```
+
+
+
+
+## DBH
+
+### All 2025 Individuals:
+```{r}
+# DBH (cm)
+mean_dbh <- mean(health_assess_2025$dbh_cm, na.rm = TRUE)
+median_dbh <- median(health_assess_2025$dbh_cm, na.rm = TRUE)
+
+# violin_dbh <- health_assess_2025 %>% ggplot(aes(x = dbh_cm)) + 
+#   geom_violin()
+# 
+# violin_dbh
+
+hist_dbh <- health_assess_2025 %>% ggplot(aes(x = dbh_cm)) +
+  geom_histogram(bins = 30, aes(fill = seedling_y_n)) + 
+  xlab("2025 All *WCP* Individuals DBH (cm)")
+  ylab("Number of Individuals") + 
+  # Mean
+  geom_vline(
+    aes(xintercept = mean_dbh),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 30,
+           y = 5,
+           label = paste("Mean =", round(mean_dbh, 2), "cm")) +
+  
+  # Median
+  geom_vline(
+    aes(xintercept = median_dbh),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 20,
+           y = 8,
+           label = paste("Median =", round(median_dbh, 2), "cm")) 
+hist_dbh
+```
+
+
+
+### Adults: Most adults in WCP were saplings. 
+```{r}
+adults_2025 <- health_assess_2025 %>% filter(!is.na(dbh_cm))
+
+# DBH (cm)
+mean_dbh <- mean(adults_2025$dbh_cm, na.rm = TRUE)
+median_dbh <- median(adults_2025$dbh_cm, na.rm = TRUE)
+hist_dbh <- adults_2025 %>% ggplot(aes(x = dbh_cm)) +
+  geom_histogram(bins = 30, aes(fill = seedling_y_n)) + 
+  xlab("2025 WCP Adult DBH (cm) [Should only be adults]")
+  ylab("Number of Individuals") + 
+  # Mean
+  geom_vline(
+    aes(xintercept = mean_dbh),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 30,
+           y = 5,
+           label = paste("Mean =", round(mean_dbh, 2), "cm")) +
+  
+  # Median
+  geom_vline(
+    aes(xintercept = median_dbh),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 20,
+           y = 8,
+           label = paste("Median =", round(median_dbh, 2), "cm")) 
+hist_dbh
+```
+
+## % Live Canopy
+
+### All individual distribution
+```{r}
+mean_percent_live_canopy <- mean(health_assess_2025$percent_live_canopy, na.rm = TRUE)
+median_percent_live_canopy <- median(health_assess_2025$percent_live_canopy, na.rm = TRUE)
+
+hist_percent_live_canopy_2025 <- health_assess_2025 %>% 
+  ggplot(aes(x = percent_live_canopy)) +
+  xlab("% Live Canopy in 2025") +
+  ylab("Number of Individuals") + 
+  geom_histogram(bins = 30, aes(fill = seedling_y_n)) + 
+  # Mean
+  geom_vline(
+    aes(xintercept = mean_percent_live_canopy),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 70,
+           y = 20, 
+           label = paste("Mean =", round(mean_percent_live_canopy, 2), "%")) +
+  
+  # Median
+  geom_vline(
+    aes(xintercept = median_percent_live_canopy),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 85,
+           y = 30,
+           label = paste("Median =", round(median_percent_live_canopy, 2), "%")) 
+
+hist_percent_live_canopy_2025
+```
+
+### Seedling subset
+```{r}
+seedlings_2025 <- health_assess_2025 %>% filter(is.na(dbh_cm))
+
+mean_percent_live_canopy <- mean(seedlings_2025$percent_live_canopy, na.rm = TRUE)
+median_percent_live_canopy <- median(seedlings_2025$percent_live_canopy, na.rm = TRUE)
+
+hist_percent_live_canopy_2025_seedling <- seedlings_2025 %>% 
+  ggplot(aes(x = percent_live_canopy)) +
+  xlab("% Live Canopy in 2025 FOR SEEDLINGS") +
+  ylab("Number of Individuals") + 
+  geom_histogram(bins = 30, aes(fill = seedling_y_n)) + 
+  # Mean
+  geom_vline(
+    aes(xintercept = mean_percent_live_canopy),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 70,
+           y = 20, 
+           label = paste("Mean =", round(mean_percent_live_canopy, 2), "%")) +
+  
+  # Median
+  geom_vline(
+    aes(xintercept = median_percent_live_canopy),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 85,
+           y = 30,
+           label = paste("Median =", round(median_percent_live_canopy, 2), "%")) 
+
+hist_percent_live_canopy_2025_seedling
+```
+
+
+### Adult subset
+```{r}
+adults_2025 <- health_assess_2025 %>% filter(!is.na(dbh_cm))
+
+mean_percent_live_canopy <- mean(adults_2025$percent_live_canopy, na.rm = TRUE)
+median_percent_live_canopy <- median(adults_2025$percent_live_canopy, na.rm = TRUE)
+
+hist_percent_live_canopy_2025_adult <- adults_2025 %>% 
+  ggplot(aes(x = percent_live_canopy)) +
+  xlab("% Live Canopy in 2025 FOR ADULTS") +
+  ylab("Number of Individuals") + 
+  geom_histogram(bins = 30, aes(fill = seedling_y_n)) + 
+  # Mean
+  geom_vline(
+    aes(xintercept = mean_percent_live_canopy),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 70,
+           y = 20, 
+           label = paste("Mean =", round(mean_percent_live_canopy, 2), "%")) +
+  
+  # Median
+  geom_vline(
+    aes(xintercept = median_percent_live_canopy),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 85,
+           y = 30,
+           label = paste("Median =", round(median_percent_live_canopy, 2), "%")) 
+
+hist_percent_live_canopy_2025_adult
+
+```
+
+
+
+
+## Epicormics
+```{r}
+# ------------ BASE
+
+mean_hist_epicormic_base <- mean(health_assess_2025$base_epicormics, na.rm = TRUE)
+median_hist_epicormic_base <- median(health_assess_2025$base_epicormics, na.rm = TRUE)
+
+hist_epicormic_base <- health_assess_2025 %>% ggplot(aes(x = base_epicormics)) +
+  geom_histogram(aes(fill = seedling_y_n_2025)) +
+  ylab("Number of Individuals") + 
+  geom_histogram(bins = 30, aes(fill = seedling_y_n)) + 
+  # Mean
+  geom_vline(
+    aes(xintercept = mean_hist_epicormic_base),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 1.3,
+           y = 20, 
+           label = paste("Mean =", round(mean_hist_epicormic_base, 2))) +
+  
+  # Median
+  geom_vline(
+    aes(xintercept = median_hist_epicormic_base),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 0.7,
+           y = 30,
+           label = paste("Median =", round(median_hist_epicormic_base, 2)))
+```
+
+```{r}
+# ------------ TRUNK
+mean <- mean(health_assess_2025$trunk_epicormics, na.rm = TRUE)
+median <- median(health_assess_2025$trunk_epicormics, na.rm = TRUE)
+
+hist_epicormic_trunk <- health_assess_2025 %>% ggplot(aes(x = trunk_epicormics)) +
+  geom_histogram(aes(fill = seedling_y_n)) + 
+  ylab("Number of Individuals") + 
+  # Mean
+  geom_vline(
+    aes(xintercept = mean),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 0.6,
+           y = 20, 
+           label = paste("Mean =", round(mean, 2))) +
+  
+  # Median
+  geom_vline(
+    aes(xintercept = median),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 0.4,
+           y = 30,
+           label = paste("Median =", round(median, 2)))
+
+hist_epicormic_base / hist_epicormic_trunk
+```
+
+## Has Canker & Callous 
+
+```{r}
+library(viridis)
+
+health_assess_2025 <- health_assess_2025 %>% mutate(
+  purdue_severity_canker = recode(
+    health_assess_2025$purdue_severity_canker,
+    "1. Fewer than 3 active cankers that are all smaller than 2-3 inches in length or diameter OR fewer than 3 inactive cankers." = "1",
+    "2. More than 3 active cankers, OR 2-5 shallow (with no dead tissue) healed over with cracks less than 7 inches long." = "2",
+"3. More than 5 active OR inactive cankers cracked through the bark to the tissue below which have healed over, but you still see the level of damage." = "3",
+"4. Cankers occur all over the 10-foot area, with deep cracks and both active and inactive cankers." = "4",
+"5. Tree almost dead, mostly inactive cankers with deep cracks to dead tissue." = "5"
+  )
+)
+
+bar_has_canker_2025 <- health_assess_2025 %>% ggplot(aes(x = has_canker)) +
+  geom_bar( aes(fill = purdue_severity_canker))
+
+bar_has_callous_2025 <- health_assess_2025 %>% ggplot(aes(x = has_callous)) +
+  geom_bar( aes(fill = purdue_severity_canker))
+
+(bar_has_canker_2025 + bar_has_callous_2025) + plot_layout(guides="collect")
+```
+
+## Canker Areas
+```{r}
+mean_base_area <- mean(health_assess_2025$base_canker_area, na.rm = TRUE)
+median_base_area <- median(health_assess_2025$base_canker_area, na.rm = TRUE)
+
+hist_base_canker <- health_assess_2025 %>% ggplot(aes(x = base_canker_area)) +
+  geom_histogram( aes(fill = seedling_y_n)) + 
+  ylab("Number of Individuals") + 
+  # Mean
+  geom_vline(
+    aes(xintercept = mean_base_area),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 26,
+           y = 10, 
+           label = paste("Mean =", round(mean_base_area, 2), "%")) +
+  
+  # Median
+  geom_vline(
+    aes(xintercept = median_base_area),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 10,
+           y = 25,
+           label = paste("Median =", round(median_base_area, 2), "%"))
+
+```
+
+```{r}
+mean_trunk_area <- mean(health_assess_2025$trunk_canker_area, na.rm = TRUE)
+median_trunk_area <- median(health_assess_2025$trunk_canker_area, na.rm = TRUE)
+
+hist_trunk_canker <- health_assess_2025 %>% ggplot(aes(x = trunk_canker_area)) +
+  geom_histogram(aes(fill = seedling_y_n)) +
+  ylab("Number of Individuals") + 
+  # Mean
+  geom_vline(
+    aes(xintercept = mean_trunk_area),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 32,
+           y = 10, 
+           label = paste("Mean =", round(mean_trunk_area, 2), "%")) +
+  
+  # Median
+  geom_vline(
+    aes(xintercept = median_trunk_area),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 30,
+           y = 13,
+           label = paste("Median =", round(median_trunk_area, 2), "%"))
+
+hist_base_canker / hist_trunk_canker
+```
+
+```{r}
+density_trunk_canker <- health_assess_2025 %>% ggplot(aes(x = trunk_canker_area)) +
+  geom_density()
+  # + aes(fill = has_callous_2025))
+  # # Mean
+  # geom_vline(
+  #   aes(xintercept = mean_trunk_area),
+  #   color = "#bdbdbd",
+  #   linetype = "dashed",
+  #   size = 1
+  # ) +
+  # annotate("text",
+  #          color = "#bdbdbd",
+  #          x = 0.1,
+  #          y = 0.1, 
+  #          label = paste("Mean =", round(mean_trunk_area, 2), "%")) +
+  # 
+  # # Median
+  # geom_vline(
+  #   aes(xintercept = median_trunk_area),
+  #   color = "#636363",
+  #   linetype = "solid",
+  #   size = 1
+  # ) +
+  # annotate("text",
+  #          color = "#636363",
+  #          x = 0.5,
+  #          y = 0.5,
+  #          label = paste("Median =", round(median_trunk_area, 2), "%"))
+
+
+density_trunk_canker
+
+```
+
+```{r}
+
+# Linear regression model
+model <- lm(base_canker_area ~ dbh_cm, data = health_assess_2025)
+coefs <- coef(model)
+r_squared <- summary(model)$r.squared
+equation <- paste("y = ", round(coefs[2], 2), "x", " + ", round(coefs[1], 2),  sep = "")
+   
+point_base_canker <- health_assess_2025 %>% ggplot(aes(x = dbh_cm, y =
+                                                         base_canker_area)) +
+  geom_point(aes(color = seedling_y_n)) +
+  geom_smooth(method = lm) +
+  annotate(
+    "text",
+    x = 30,
+    y = 80,
+    label = equation,
+    hjust = 0
+  ) + 
+  annotate(
+    "text",
+    x = 30,
+    y = 65,
+    label = paste("R-squared = ", round(r_squared, 4)),
+    hjust = 0
+  )
+```
+
+```{r}
+# Linear regression model
+model <- lm(trunk_canker_area ~ dbh_cm, data = health_assess_2025)
+coefs <- coef(model)
+r_squared <- summary(model)$r.squared
+equation <- paste("y = ", round(coefs[2], 2), "x", " + ", round(coefs[1], 2),  sep = "")
+
+point_trunk_canker <- health_assess_2025 %>% ggplot(aes(x = dbh_cm, y=trunk_canker_area)) +
+  geom_point(aes(color=seedling_y_n)) + 
+  geom_smooth(method=lm) + 
+    annotate(
+    "text",
+    x = 30,
+    y = 80,
+    label = equation,
+    hjust = 0
+  ) + 
+  annotate(
+    "text",
+    x = 30,
+    y = 65,
+    label = paste("R-squared = ", round(r_squared, 4)),
+    hjust = 0
+  )
+
+(point_base_canker / point_trunk_canker) + plot_layout(guides="collect")
+```
+
+```{r}
+health_assess_2025 %>%
+  ggplot() +
+  geom_point(aes(x=dbh_cm, y=base_canker_area, colour = purdue_severity_canker)) + 
+  theme_classic() + 
+  facet_wrap(~purdue_severity_canker)
+```
+
+
+## Canker severity
+```{r}
+bar_canker_severity <- health_assess_2025 %>% ggplot(aes(x = purdue_severity_canker)) + 
+  geom_bar(aes(fill = purdue_severity_canker))
+
+bar_canker_severity
+```
+
+# Summary Plots
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+(bar_seedlings)
+
+(hist_plant_height / hist_dbh)
+
+bar_canker_severity
+
+hist_percent_live_canopy_2025
+  
+#(hist_epicormic_base_2025 / hist_epicormic_trunk_2025 ) + plot_layout(guides="collect")
+
+((bar_has_canker_2025 / bar_has_callous_2025))
+
+((hist_trunk_canker / hist_base_canker))+plot_layout(guides="collect")
+
+```
+
