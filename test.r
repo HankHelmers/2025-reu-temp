@@ -1,29 +1,17 @@
----
-title: "week8_cleaning_2024_health_form_data"
-output: html_document
-date: "2025-07-17"
----
-
-# Tidying data 
-## Import
-```{r message=FALSE, warning=FALSE}
+## ----message=FALSE, warning=FALSE-----------------------------------------------------------------------------
 library(tidyverse)
 library(readr)
 library(styler)
 health_assess_2024 <- read_csv("july_3_2024_butternut_health_assessment_forms.csv")
 # view(health_assess_2024)
-```
 
-## Select relevant WCP entries
-```{r}
+
+## -------------------------------------------------------------------------------------------------------------
 # Get only the WCP observations (first 66)
 health_assess_2024 <-  filter(health_assess_2024, health_assess_2024$`Site number or initial` == "WCP")
-```
 
 
-## Renaming columns & creating variables for readability
-### 2024
-```{r}
+## -------------------------------------------------------------------------------------------------------------
 # Plant Height (ft)
 health_assess_2024 <- health_assess_2024 %>% rename(plant_height_ft = `Plant height (ft)`)
 
@@ -57,15 +45,12 @@ health_assess_2024 <- health_assess_2024 %>% rename(purdue_severity = `If trees 
 
 # seedling_y_n_2024
 health_assess_2024 <- health_assess_2024 %>% rename(seedling_y_n = `Seedling (Y/N)`)
-```
 
-## Fixing typing
 
-### 2024
-```{r}
+## -------------------------------------------------------------------------------------------------------------
 health_assess_2024$plant_height_ft <- as.numeric(health_assess_2024$plant_height_ft)
 health_assess_2024$dbh_cm <- as.numeric(health_assess_2024$dbh_cm)
 health_assess_2024$percent_live_canopy <- as.numeric(health_assess_2024$percent_live_canopy)
 health_assess_2024$base_canker_area <- as.numeric(health_assess_2024$base_canker_area)
 health_assess_2024$trunk_canker_area <- as.numeric(health_assess_2024$trunk_canker_area)
-```
+

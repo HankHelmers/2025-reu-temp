@@ -7,38 +7,50 @@ output:
 date: "2025-07-15"
 ---
 
-
 # Hypothesis 2: Higher DBH will be correlated with a higher percentage of canker on the trunk and base
-* Variables: DBH→ canker_area_base/trunk
-* Mechanism: a large, healthy tree might fight off the canker for longer amount of time while small trees are the opposite
+
+-   Variables: DBH→ canker_area_base/trunk
+-   Mechanism: a large, healthy tree might fight off the canker for longer amount of time while small trees are the opposite
 
 # Data Import
+
 ## Importing 2024 & 2025 Data
-See the full code for the break down for the importing and cleaning open the documents of the same name. 
 
-### Create the R files if needed. 
-First, I need to retrieve only the R code from the cleaning files. These files also include text descriptions of what cleaning is done, which is not needed for importing the code to do the data cleaning here. 
+See the full code for the break down for the importing and cleaning open the documents of the same name.
+
+### Create the R files if needed.
+
+Purl (or stitch) together R code from the markdown cleaning files. These stitched files are stored in 'purl' folder with the date of the code purled.
+
 ```{r EVAL=FALSE, IGNORE=TRUE}
-# purl("G:/My Drive/1 Projects/REU2425 - Morton Arboretum/R/REU2025-data-exploration/week8_cleaning_2024_health_form_data.Rmd")
-# 
-# purl("G:/My Drive/1 Projects/REU2425 - Morton Arboretum/R/REU2025-data-exploration/week8_cleaning_2025_health_form_data.Rmd")
-```
+library(knitr)
 
+purl("cleaning_2024_health_form_data.Rmd", 
+     output = 
+       paste("purl/cleaning_2024_health_form_data",
+       Sys.Date(),".R"))
+
+purl("cleaning_2025_health_form_data.Rmd", 
+     output = 
+       paste("purl/cleaning_2025_health_form_data",
+       Sys.Date(),".R"))
+```
 
 ### Run the R files to get cleaned data
-Next, we can run those extracted R files to actually import and clean the data. 
+
+Next, we can run those extracted R files to actually import and clean the data.
+
 ```{r message=FALSE, warning=FALSE}
 ## 2024 data
-source("G:/My Drive/1 Projects/REU2425 - Morton Arboretum/R/REU2025-data-exploration/week8_cleaning_2024_health_form_data.R")
+source(paste("purl/cleaning_2024_health_form_data", Sys.Date(), ".R"))
 
 ## 2025 data
-source("G:/My Drive/1 Projects/REU2425 - Morton Arboretum/R/REU2025-data-exploration/week8_cleaning_2025_health_form_data.R")
+source(paste("purl/cleaning_2025_health_form_data", Sys.Date(), ".R"))
 ```
-
 
 # Setup of Analysis
 
-This chunk defines a re-usable function to run a regression across multiple input datas. 
+This chunk defines a re-usable function to run a regression across multiple input datas.
 
 ```{r define_hypoth2_analysis}
 do_hypoth2_analysis <- function(data, predictor, response, xlabel, ylabel, color = "black") {
@@ -113,30 +125,30 @@ do_hypoth2_analysis <- function(data, predictor, response, xlabel, ylabel, color
 }
 ```
 
-
 # Data Analysis
+
 Here are the major delinations of questions across this hypotheses:
 
-* What patterns of DBH and canker areas do we see overall-- across all sites, years and age classes?
-* What patterns of DBH and canker areas do we see across years?
-* What patterns of DBH and canker areas do we see across seedlings?
-* What patterns of DBH and canker areas do we see across adults?
-* What patterns of DBH and canker areas do we see across sites?
+-   What patterns of DBH and canker areas do we see overall-- across all sites, years and age classes?
+-   What patterns of DBH and canker areas do we see across years?
+-   What patterns of DBH and canker areas do we see across seedlings?
+-   What patterns of DBH and canker areas do we see across adults?
+-   What patterns of DBH and canker areas do we see across sites?
 
-Notably: 
-* I'd like to include both base and trunk canker area on the same graph; I think that could be very nice
+Notably: \* I'd like to include both base and trunk canker area on the same graph; I think that could be very nice
 
 ## Patterns overall-- across all individuals (all sites, years, and age classes)
+
 ```{r}
 
 # Combining 2024 and 2025 data along canker area & DBH
 #combined_2024_2025 <- 
 ```
 
-
-
 ## Patterns across years
+
 ### Patterns across 2025
+
 ```{r run_2025_analysis, message=FALSE, warning=FALSE}
 library(scales)
 
@@ -174,6 +186,7 @@ patterns_across_2025_girdled
 ```
 
 ### Patterns across 2024
+
 ```{r message=FALSE, warning=FALSE}
 library(scales)
 
@@ -200,20 +213,24 @@ patterns_across_2024_trunk <- do_hypoth2_analysis(
 patterns_across_2024_trunk
 ```
 
-
 ## Patterns across sites
-**************
+
+------------------------------------------------------------------------
 
 ## Results
+
 ### Girdled circumference: Negative correlation between DBH and % circumference girdled
-This result would indicate that younger trees have slightly higher girdling. 
+
+This result would indicate that younger trees have slightly higher girdling.
 
 We may be seeing this trend due to an inaccuracy with attempting to estimate circumference on smaller trees.
+
 ```{r message=FALSE}
 patterns_across_2025_girdled
 ```
 
-### 2024 versus 2025: Appears to be an increase in DBH ~ Canker Area over 2024 and 2025.
+### 2024 versus 2025: Appears to be an increase in DBH \~ Canker Area over 2024 and 2025.
+
 ```{r message=FALSE}
 library(patchwork)
 
@@ -221,12 +238,13 @@ library(patchwork)
 
 (patterns_across_2024_trunk + patterns_across_2025_trunk) + plot_annotation("% Trunk Canker Area 2024 versus 2025")
 ```
-  
-  
+
 # Future work
 
 ## Comparing base and trunk areas on same graph
+
 ## Two response variables (base/trunk compared together)
+
 ```{r eval=FALSE}
 # 
 # # This ensures adds a DBH measure to each of the canker entries, such that they can be plotted against each other. 
