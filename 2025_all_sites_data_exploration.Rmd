@@ -7,113 +7,92 @@ output:
 date: "2025-07-15"
 ---
 
-# Import 2024 Data
-```{r include=false}
+# Data Import
 
-# 2024 CLEANING
---------------------------------------------------------------------------------------------------------
-# Import
-library(tidyverse)
-library(readr)
-library(styler)
-health_assess_2024 <- read_csv("july_3_2024_butternut_health_assessment_forms.csv")
+## Importing 2024 & 2025 Data
 
-# Select relevant site: West Chicago Prairie (WCP)---------------------------------
-health_assess_2024 <-  filter(health_assess_2024, health_assess_2024$`Site number or initial` == "WCP")
+See the full code for the break down for the importing and cleaning open the documents of the same name. Or here: 
+- [2024 cleaning code](https://rpubs.com/hankhelmers/cleaning_2024_health_form_data) and 
+- [2025 cleaning code](https://rpubs.com/hankhelmers/cleaning_2025_health_form_data)
 
-# Renaming columns & creating variables for readability---------------------------------
-## Plant Height (ft)
-health_assess_2024 <- health_assess_2024 %>% rename(plant_height_ft = `Plant height (ft)`)
-plant_height_ft_2024 <- health_assess_2024$plant_height_ft
+### Create the R files if needed.
 
-## DBH
-health_assess_2024 <- health_assess_2024 %>% rename(dbh_cm = `DBH (cm)`)
-dbh_cm_2024 <- health_assess_2024$dbh_cm
+Purl (or stitch) together R code from the markdown cleaning files. These stitched files are stored in 'purl' folder with the date of the code purled.
 
-## % live canopy
-health_assess_2024 <- health_assess_2024 %>% rename(percent_live_canopy = `Percent live canopy`)
-percent_live_canopy_2024 <- health_assess_2024$percent_live_canopy
-
-## base_epicormics_2024
-health_assess_2024 <- health_assess_2024 %>% rename(base_epicormics = `Number of epicormic branches/ sprouts from the base`)
-base_epicormics_2024 <- health_assess_2024$base_epicormics
-
-## trunk_epicormics_2024
-health_assess_2024 <- health_assess_2024 %>% rename(trunk_epicormics = `Number of epicormic branches/ sprouts from the trunk`)
-trunk_epicormics_2024 <- health_assess_2024$trunk_epicormics
-
-## has_canker_2024
-health_assess_2024 <- health_assess_2024 %>% rename(has_canker = `Visible cankers? (according to health assessment form)`)
-has_canker_2024 <- health_assess_2024$has_canker
-
-## has_callous_2024
-health_assess_2024 <- health_assess_2024 %>% rename(has_callous = `If large cankers present, are they being calloused over?`)
-has_callous_2024 <- health_assess_2024$has_callous
-
-## trunk_canker_area_2024
-health_assess_2024 <- health_assess_2024 %>% rename(trunk_canker_area = `Area of trunk infected by canker (%)`)
-trunk_canker_area_2024 <- health_assess_2024$trunk_canker_area
-
-## base_canker_area_2024
-health_assess_2024 <- health_assess_2024 %>% rename(base_canker_area = `Area of base/ root flare infected by canker (%)`)
-base_canker_area_2024 <- health_assess_2024$base_canker_area
-
-## purdue_severity_2024
-health_assess_2024 <- health_assess_2024 %>% rename(purdue_severity = `If trees are infected, severity of infection`)
-purdue_severity_2024 <- health_assess_2024$purdue_severity
-
-## seedling_y_n_2024
-health_assess_2024 <- health_assess_2024 %>% rename(seedling_y_n = `Seedling (Y/N)`)
-seedling_y_n_2024 <- health_assess_2024$seedling_y_n
-
-# Fixing typing---------------------------------
-plant_height_ft_2024 <- as.numeric(plant_height_ft_2024)
-dbh_cm_2024 <- as.numeric(dbh_cm_2024)
-percent_live_canopy_2024 <- as.numeric(percent_live_canopy_2024)
-base_canker_area_2024 <- as.numeric(base_canker_area_2024)
-trunk_canker_area_2024 <- as.numeric(trunk_canker_area_2024)
+```{r purl_cleaning, EVAL=FALSE, IGNORE=TRUE}
+# library(knitr)
+# 
+# purl("cleaning_2024_health_form_data.Rmd", 
+#      output = 
+#        paste("purl/cleaning_2024_health_form_data",
+#        Sys.Date(),".R"))
+# 
+# purl("cleaning_2025_health_form_data.Rmd", 
+#      output = 
+#        paste("purl/cleaning_2025_health_form_data",
+#        Sys.Date(),".R"))
 ```
+
+### Run the R files to get cleaned data
+
+Next, we can run those extracted R files to actually import and clean the data.
+
+```{r message=FALSE, warning=FALSE}
+## 2024 data
+source(paste("purl/cleaning_2024_health_form_data", Sys.Date(), ".R"))
+
+## 2025 data
+source(paste("purl/cleaning_2025_health_form_data", Sys.Date(), ".R"))
+```
+
+### Combining 2024 and 2025 data along canker area & DBH
+```{r combined_years, message=FALSE, warning=FALSE}
+library(dplyr)
+
+# Add a 'year' column to each dataset to allow grouping/plotting by year
+health_assess_2024 <- health_assess_2024 %>%
+  mutate(year = 2024)
+
+health_assess_2025 <- health_assess_2025 %>%
+  mutate(year = 2025)
+
+# Keep only the necessary columns for this hypothesis
+sliced_2024 <- health_assess_2024 %>%
+  select(year, seedling_y_n, dbh_cm, plant_height_ft, percent_live_canopy, has_canker, has_callous, base_canker_area, trunk_canker_area) 
+
+sliced_2025 <- health_assess_2025 %>%
+  select(year, seedling_y_n, dbh_cm, plant_height_ft, percent_live_canopy, has_canker, has_callous, base_canker_area, trunk_canker_area) 
+
+# Combine the two data frames
+combined_2024_2025 <- bind_rows(sliced_2024, sliced_2025) 
+```
+
+
 
 
 # Data exploration
 ## Summary of data
 ```{r paged.print=TRUE}
-print("plant_height_ft_2024------------------------------")
-summary(plant_height_ft_2024)
+summary(combined_2024_2025$plant_height_ft)
 
-print("dbh_cm_2024------------------------------")
-summary(dbh_cm_2024)
+summary(combined_2024_2025$dbh_cm)
 
-print("percent_live_canopy_2024------------------------------")
-summary(percent_live_canopy_2024)
+summary(combined_2024_2025$percent_live_canopy)
 
-print("base_epicormics_2024------------------------------")
-summary(base_epicormics_2024)
+summary(combined_2024_2025$has_canker)
 
-print("trunk_epicormics_2024------------------------------")
-summary(trunk_epicormics_2024)
+summary(combined_2024_2025$has_callous)
 
-print("has_canker_2024------------------------------")
-summary(has_canker_2024)
+summary(combined_2024_2025$trunk_canker_area)
 
-print("has_callous_2024------------------------------")
-summary(has_callous_2024)
-
-print("trunk_canker_area_2024------------------------------")
-summary(trunk_canker_area_2024)
-
-print("base_canker_area_2024------------------------------")
-summary(base_canker_area_2024)
-
-print("purdue_severity_2024------------------------------")
-summary(purdue_severity_2024)
+summary(combined_2024_2025$base_canker_area)
 ```
 
 
 ## Proportion of seedlings
 ```{r}
-bar_seedlings <- health_assess_2024 %>% ggplot(aes(x = seedling_y_n_2024)) +
-  geom_bar(aes(fill = seedling_y_n_2024))
+bar_seedlings <- health_assess_2025 %>% ggplot(aes(x = health_assess_2025$seedling_y_n)) +
+  geom_bar(aes(fill = seedling_y_n))
 
 bar_seedlings
 ```
@@ -242,7 +221,9 @@ median_hist_epicormic_base <- median(base_epicormics_2024, na.rm = TRUE)
 
 hist_epicormic_base <- health_assess_2024 %>% ggplot(aes(x = base_epicormics_2024)) +
   geom_histogram(aes(fill = seedling_y_n_2024)) +
+  xlab("Base Canker Area") + 
   ylab("Number of Individuals") + 
+  title("2025 Base Canker Area") + 
   geom_histogram(bins = 30, aes(fill = seedling_y_n_2024)) + 
   # Mean
   geom_vline(
@@ -278,7 +259,9 @@ median <- median(trunk_epicormics_2024, na.rm = TRUE)
 
 hist_epicormic_trunk <- health_assess_2024 %>% ggplot(aes(x = trunk_epicormics_2024)) +
   geom_histogram(aes(fill = seedling_y_n_2024)) + 
+  xlab("Trunk Canker Area") + 
   ylab("Number of Individuals") + 
+  title("2025 Base Canker Area") + 
   # Mean
   geom_vline(
     aes(xintercept = mean),
@@ -313,23 +296,25 @@ hist_epicormic_base / hist_epicormic_trunk
 ```{r}
 library(viridis)
 
-bar_has_canker_2024 <- health_assess_2024 %>% ggplot(aes(x = has_canker)) +
+bar_has_canker_2025 <- health_assess_2025 %>% ggplot(aes(x = has_canker)) +
   geom_bar() # aes(fill = has_callous_2024))
 
-bar_has_callous_2024 <- health_assess_2024 %>% ggplot(aes(x = has_callous_2024)) +
+bar_has_callous_2025 <- health_assess_2025 %>% ggplot(aes(x = has_callous)) +
   geom_bar() # aes(fill = purdue_severity_2024))
 
-bar_has_canker_2024 + bar_has_callous_2024
+bar_has_canker_2025 + bar_has_callous_2025
 ```
 
 ## Canker Areas
 ```{r}
-mean_base_area <- mean(base_canker_area_2024, na.rm = TRUE)
-median_base_area <- median(base_canker_area_2024, na.rm = TRUE)
+mean_base_area <- mean(health_assess_2025$base_canker_area, na.rm = TRUE)
+median_base_area <- median(health_assess_2025$base_canker_area, na.rm = TRUE)
 
-hist_base_canker <- health_assess_2024 %>% ggplot(aes(x = base_canker_area_2024)) +
+hist_base_canker <- health_assess_2025 %>% ggplot(aes(x = base_canker_area)) +
   geom_histogram() + # aes(fill = has_callous_2024))
+  xlab("Base Canker Area") + 
   ylab("Number of Individuals") + 
+  title("2025 Base Canker Area") + 
   # Mean
   geom_vline(
     aes(xintercept = mean_base_area),
@@ -359,10 +344,10 @@ hist_base_canker <- health_assess_2024 %>% ggplot(aes(x = base_canker_area_2024)
 ```
 
 ```{r}
-mean_trunk_area <- mean(trunk_canker_area_2024, na.rm = TRUE)
-median_trunk_area <- median(trunk_canker_area_2024, na.rm = TRUE)
+mean_trunk_area <- mean(health_assess_2025$trunk_canker_area, na.rm = TRUE)
+median_trunk_area <- median(health_assess_2025$trunk_canker_area, na.rm = TRUE)
 
-hist_trunk_canker <- health_assess_2024 %>% ggplot(aes(x = trunk_canker_area_2024)) +
+hist_trunk_canker <- health_assess_2025 %>% ggplot(aes(x = trunk_canker_area)) +
   geom_histogram() + # aes(fill = has_callous_2024))
   ylab("Number of Individuals") + 
   # Mean

@@ -1,5 +1,5 @@
 ---
-title: "week8_WCP_2025_site_data_exploration"
+title: "2025_WCP_site_data_exploration"
 output: 
   html_document:
           toc: true
@@ -15,16 +15,19 @@ See the full code for the break down for the importing and cleaning open the doc
 ## Create the R files if needed. 
 First, I need to retrieve only the R code from the cleaning files. These files also include text descriptions of what cleaning is done, which is not needed for importing the code to do the data cleaning here. 
 ```{r IGNORE=TRUE}
-purl("G:/My Drive/1 Projects/REU2425 - Morton Arboretum/R/REU2025-data-exploration/week8_cleaning_2025_health_form_data.Rmd")
+
+# purl("cleaning_2025_health_form_data.Rmd",
+#      output =
+#        paste("purl/cleaning_2025_health_form_data",
+#        Sys.Date(),".R"))
 ```
 
 
 ## Run the R files to get cleaned data
 Next, we can run those extracted R files to actually import and clean the data. 
 ```{r message=FALSE, warning=FALSE}
-
 ## 2025 data
-source("G:/My Drive/1 Projects/REU2425 - Morton Arboretum/R/REU2025-data-exploration/week8_cleaning_2025_health_form_data.R")
+source(paste("purl/cleaning_2025_health_form_data", Sys.Date(), ".R"))
 ```
 
 
@@ -391,82 +394,80 @@ hist_percent_live_canopy_2025_adult
 ```
 
 
+<!-- ## Epicormics -->
+<!-- ```{r} -->
+<!-- # ------------ BASE -->
 
+<!-- mean_hist_epicormic_base <- mean(health_assess_2025$base_epicormics, na.rm = TRUE) -->
+<!-- median_hist_epicormic_base <- median(health_assess_2025$base_epicormics, na.rm = TRUE) -->
 
-## Epicormics
-```{r}
-# ------------ BASE
+<!-- hist_epicormic_base <- health_assess_2025 %>% ggplot(aes(x = base_epicormics)) + -->
+<!--   geom_histogram(aes(fill = seedling_y_n)) + -->
+<!--   ylab("Number of Individuals") +  -->
+<!--   geom_histogram(bins = 30, aes(fill = seedling_y_n)) +  -->
+<!--   # Mean -->
+<!--   geom_vline( -->
+<!--     aes(xintercept = mean_hist_epicormic_base), -->
+<!--     color = "#bdbdbd", -->
+<!--     linetype = "dashed", -->
+<!--     size = 1 -->
+<!--   ) + -->
+<!--   annotate("text", -->
+<!--            color = "#bdbdbd", -->
+<!--            x = 1.3, -->
+<!--            y = 20,  -->
+<!--            label = paste("Mean =", round(mean_hist_epicormic_base, 2))) + -->
 
-mean_hist_epicormic_base <- mean(health_assess_2025$base_epicormics, na.rm = TRUE)
-median_hist_epicormic_base <- median(health_assess_2025$base_epicormics, na.rm = TRUE)
+<!--   # Median -->
+<!--   geom_vline( -->
+<!--     aes(xintercept = median_hist_epicormic_base), -->
+<!--     color = "#636363", -->
+<!--     linetype = "solid", -->
+<!--     size = 1 -->
+<!--   ) + -->
+<!--   annotate("text", -->
+<!--            color = "#636363", -->
+<!--            x = 0.7, -->
+<!--            y = 30, -->
+<!--            label = paste("Median =", round(median_hist_epicormic_base, 2))) -->
+<!-- ``` -->
 
-hist_epicormic_base <- health_assess_2025 %>% ggplot(aes(x = base_epicormics)) +
-  geom_histogram(aes(fill = seedling_y_n_2025)) +
-  ylab("Number of Individuals") + 
-  geom_histogram(bins = 30, aes(fill = seedling_y_n)) + 
-  # Mean
-  geom_vline(
-    aes(xintercept = mean_hist_epicormic_base),
-    color = "#bdbdbd",
-    linetype = "dashed",
-    size = 1
-  ) +
-  annotate("text",
-           color = "#bdbdbd",
-           x = 1.3,
-           y = 20, 
-           label = paste("Mean =", round(mean_hist_epicormic_base, 2))) +
-  
-  # Median
-  geom_vline(
-    aes(xintercept = median_hist_epicormic_base),
-    color = "#636363",
-    linetype = "solid",
-    size = 1
-  ) +
-  annotate("text",
-           color = "#636363",
-           x = 0.7,
-           y = 30,
-           label = paste("Median =", round(median_hist_epicormic_base, 2)))
-```
+<!-- ```{r} -->
+<!-- # ------------ TRUNK -->
+<!-- mean <- mean(health_assess_2025$trunk_epicormics, na.rm = TRUE) -->
+<!-- median <- median(health_assess_2025$trunk_epicormics, na.rm = TRUE) -->
 
-```{r}
-# ------------ TRUNK
-mean <- mean(health_assess_2025$trunk_epicormics, na.rm = TRUE)
-median <- median(health_assess_2025$trunk_epicormics, na.rm = TRUE)
+<!-- hist_epicormic_trunk <- health_assess_2025 %>% ggplot(aes(x = trunk_epicormics)) + -->
+<!--   geom_histogram(aes(fill = seedling_y_n)) +  -->
+<!--   ylab("Number of Individuals") +  -->
+<!--   # Mean -->
+<!--   geom_vline( -->
+<!--     aes(xintercept = mean), -->
+<!--     color = "#bdbdbd", -->
+<!--     linetype = "dashed", -->
+<!--     size = 1 -->
+<!--   ) + -->
+<!--   annotate("text", -->
+<!--            color = "#bdbdbd", -->
+<!--            x = 0.6, -->
+<!--            y = 20,  -->
+<!--            label = paste("Mean =", round(mean, 2))) + -->
 
-hist_epicormic_trunk <- health_assess_2025 %>% ggplot(aes(x = trunk_epicormics)) +
-  geom_histogram(aes(fill = seedling_y_n)) + 
-  ylab("Number of Individuals") + 
-  # Mean
-  geom_vline(
-    aes(xintercept = mean),
-    color = "#bdbdbd",
-    linetype = "dashed",
-    size = 1
-  ) +
-  annotate("text",
-           color = "#bdbdbd",
-           x = 0.6,
-           y = 20, 
-           label = paste("Mean =", round(mean, 2))) +
-  
-  # Median
-  geom_vline(
-    aes(xintercept = median),
-    color = "#636363",
-    linetype = "solid",
-    size = 1
-  ) +
-  annotate("text",
-           color = "#636363",
-           x = 0.4,
-           y = 30,
-           label = paste("Median =", round(median, 2)))
+<!--   # Median -->
+<!--   geom_vline( -->
+<!--     aes(xintercept = median), -->
+<!--     color = "#636363", -->
+<!--     linetype = "solid", -->
+<!--     size = 1 -->
+<!--   ) + -->
+<!--   annotate("text", -->
+<!--            color = "#636363", -->
+<!--            x = 0.4, -->
+<!--            y = 30, -->
+<!--            label = paste("Median =", round(median, 2))) -->
 
-hist_epicormic_base / hist_epicormic_trunk
-```
+<!-- hist_epicormic_base / hist_epicormic_trunk -->
+<!-- ``` -->
 
 ## Has Canker & Callous 
 
@@ -494,6 +495,29 @@ bar_has_callous_2025 <- health_assess_2025 %>% ggplot(aes(x = has_callous)) +
 ```
 
 ## Canker Areas
+
+
+### Box plots
+```{r}
+health_long <- seedlings_2025 %>%
+  mutate(case_id = row_number()) %>%
+  pivot_longer(
+    cols = ends_with("canker_area"),
+    names_to = "canker_type",
+    values_to = "canker_percentage"
+  ) 
+
+canker_base_box <- health_long %>% ggplot(aes(x = canker_type, y = canker_percentage)) +
+  geom_violin(fill = "skyblue", color = "black") +
+  geom_point(alpha = 0.2) + 
+  geom_jitter(width = 0.1, alpha = 0.5) + 
+  theme_minimal() +
+  labs(x = "Canker Location", y = "% Covered In Canker")
+
+canker_base_box
+```
+
+### Histograms
 ```{r}
 mean_base_area <- mean(health_assess_2025$base_canker_area, na.rm = TRUE)
 median_base_area <- median(health_assess_2025$base_canker_area, na.rm = TRUE)
@@ -672,6 +696,312 @@ bar_canker_severity <- health_assess_2025 %>% ggplot(aes(x = purdue_severity_can
 
 bar_canker_severity
 ```
+
+
+## Densiometer
+
+### Box & Violin
+```{r}
+health_long <- health_assess_2025 %>%
+  pivot_longer(cols = starts_with("densio_"),
+               names_to = "direction",
+               values_to = "percent_cover")
+
+
+densiometer_box <- health_long %>% ggplot(aes(x = direction, y = percent_cover)) +
+  geom_boxplot(fill = "skyblue", color = "black") +
+  
+  # Conditional fill and color
+  geom_boxplot(
+    aes(fill = direction == "densio_south", color = direction == "densio_south")
+  ) +
+  
+  geom_jitter(width = 0.1, alpha = 0.5) +
+
+  # Manual scales for TRUE/FALSE
+  scale_fill_manual(
+    values = c("TRUE" = "tomato", "FALSE" = "skyblue"),
+    guide = "none"  # hide fill legend
+  ) +
+  scale_color_manual(
+    values = c("TRUE" = "darkred", "FALSE" = "black"),
+    guide = "none"  # hide color legend
+  ) +
+  
+  theme_minimal() +
+  labs(title = "Densiometer % Open by Direction", x = "Direction", y = "Percent Cover")
+densiometer_box
+
+# VIOLIN 
+# 
+# health_long <- health_long %>%
+#   filter(direction != 'densio_average')
+
+densiometer_violin <- health_long %>%
+  ggplot(aes(x = direction, y = percent_cover)) +
+  
+  # Conditional fill and color
+  geom_violin(
+    aes(fill = direction == "densio_south", color = direction == "densio_south")
+  ) +
+  
+  geom_jitter(width = 0.1, alpha = 0.5) +
+
+  # Manual scales for TRUE/FALSE
+  scale_fill_manual(
+    values = c("TRUE" = "tomato", "FALSE" = "skyblue"),
+    guide = "none"  # hide fill legend
+  ) +
+  scale_color_manual(
+    values = c("TRUE" = "darkred", "FALSE" = "black"),
+    guide = "none"  # hide color legend
+  ) +
+
+  theme_minimal() +
+  labs(
+    title = "Densiometer % Open by Direction",
+    x = "Direction",
+    y = "Percent Cover"
+  )
+densiometer_violin
+```
+### Individual Spagetti Plot
+```{r}
+seedlings_2025 <- health_assess_2025 %>% filter(is.na(dbh_cm))
+
+seedling_health_long <- seedlings_2025 %>%
+  mutate(case_id = row_number()) %>%
+  pivot_longer(
+    cols = starts_with("densio_"),
+    names_to = "direction",
+    values_to = "percent_cover"
+  ) %>%
+  mutate(
+    quartile = ntile(percent_cover, 4)  # 4 = quartiles
+  )
+
+
+seedling_health_long <- seedling_health_long %>%
+  mutate(line_type = "Individual")  # add a dummy column to map linetype
+
+seedling_health_long <- seedling_health_long %>%
+  filter(direction != "densio_average")
+
+individual_spagetti_quartile <- seedling_health_long %>% ggplot(aes(x = direction, y = percent_cover, group = case_id)) +
+  # Spaghetti lines with linetype
+  geom_line(aes(linetype = line_type, color = factor(quartile)), alpha = 0.3) +
+
+  # Points
+  geom_point(aes(color = factor(quartile)), size = 2, alpha = 0.8) +
+
+  # Mean line
+  stat_summary(
+    fun = mean,
+    geom = "line",
+    aes(group = 1, color = "Mean", linetype = "Mean"),
+    size = 1.2
+  ) +
+
+  # Mean points
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    aes(group = 1, color = "Mean"),
+    size = 3
+  ) +
+
+  # Manual color and linetype scales
+  scale_color_manual(
+    name = "Legend",
+    values = c(
+      "1" = "#E41A1C",
+      "2" = "#377EB8",
+      "3" = "#4DAF4A",
+      "4" = "#984EA3"
+    ),
+    labels = c("Q1", "Q2", "Q3", "Q4")
+  ) +
+  scale_linetype_manual(
+    name = "Line Type",
+    values = c("Individual" = "solid", "Mean" = "solid"),
+    labels = c("Individual", "Mean")
+  ) +
+
+  theme_minimal() +
+  labs(
+    title = "% Open on Densiometer by Cardinal Direction",
+    subtitle = "Thin lines represent individual seedlings across directions",
+    x = "Cardinal Direction",
+    y = "% Open on Densiometer"
+  )
+individual_spagetti
+```
+
+
+### North
+```{r}
+mean_north <- mean(health_assess_2025$densio_north, na.rm = TRUE)
+median_north <- median(health_assess_2025$densio_north, na.rm = TRUE)
+
+hist_densio_north <- health_assess_2025 %>% ggplot(aes(x = densio_north)) +
+  geom_histogram() + # aes(fill = seedling_y_n)) +
+  ylab("Number of Individuals") + 
+  # Mean
+  geom_vline(
+    aes(xintercept = mean_north),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 32,
+           y = 10, 
+           label = paste("Mean =", round(mean_north, 2), "%")) +
+  
+  # Median
+  geom_vline(
+    aes(xintercept = median_north),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 30,
+           y = 13,
+           label = paste("Median =", round(median_north, 2), "%"))
+
+hist_densio_north
+
+```
+
+### South
+
+```{r}
+mean_south <- mean(health_assess_2025$densio_south, na.rm = TRUE)
+median_south <- median(health_assess_2025$densio_south, na.rm = TRUE)
+
+hist_densio_south <- health_assess_2025 %>% ggplot(aes(x = densio_south)) +
+  geom_histogram() + # aes(fill = seedling_y_n)) +
+  ylab("Number of Individuals") + 
+  # Mean
+  geom_vline(
+    aes(xintercept = mean_south),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 32,
+           y = 10, 
+           label = paste("Mean =", round(mean_south, 2), "%")) +
+  
+  # Median
+  geom_vline(
+    aes(xintercept = median_south),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 30,
+           y = 13,
+           label = paste("Median =", round(median_south, 2), "%"))
+
+hist_densio_south
+
+```
+### East
+```{r}
+mean_east <- mean(health_assess_2025$densio_east, na.rm = TRUE)
+median_east <- median(health_assess_2025$densio_east, na.rm = TRUE)
+
+hist_densio_east <- health_assess_2025 %>% ggplot(aes(x = densio_east)) +
+  geom_histogram() + # aes(fill = seedling_y_n)) +
+  ylab("Number of Individuals") + 
+  # Mean
+  geom_vline(
+    aes(xintercept = mean_east),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 32,
+           y = 10, 
+           label = paste("Mean =", round(mean_east, 2), "%")) +
+  
+  # Median
+  geom_vline(
+    aes(xintercept = median_east),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 30,
+           y = 13,
+           label = paste("Median =", round(median_east, 2), "%"))
+
+hist_densio_east
+
+```
+
+### West
+```{r}
+mean_west <- mean(health_assess_2025$densio_east, na.rm = TRUE)
+median_west <- median(health_assess_2025$densio_east, na.rm = TRUE)
+
+hist_densio_west <- health_assess_2025 %>% ggplot(aes(x = densio_west)) +
+  geom_histogram() + # aes(fill = seedling_y_n)) +
+  ylab("Number of Individuals") + 
+  # Mean
+  geom_vline(
+    aes(xintercept = mean_west),
+    color = "#bdbdbd",
+    linetype = "dashed",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#bdbdbd",
+           x = 32,
+           y = 10, 
+           label = paste("Mean =", round(mean_west, 2), "%")) +
+  
+  # Median
+  geom_vline(
+    aes(xintercept = median_west),
+    color = "#636363",
+    linetype = "solid",
+    size = 1
+  ) +
+  annotate("text",
+           color = "#636363",
+           x = 30,
+           y = 13,
+           label = paste("Median =", round(median_west, 2), "%"))
+
+hist_densio_west
+
+```
+```{r}
+library(patchwork)
+
+empty <- plot_spacer()
+
+(
+  (empty +            hist_densio_west  + empty) /
+  (hist_densio_west + empty +             hist_densio_east) /
+  (empty +            hist_densio_south + empty))
+
+  
+```
+
 
 # Summary Plots
 ```{r echo=FALSE, message=FALSE, warning=FALSE}

@@ -1,16 +1,16 @@
-## ----message=FALSE--------------------------------------------------------------------------------------------
+## ----import, message=FALSE------------------------------------------------------------------------
 library(tidyverse)
 library(readr)
 library(styler)
 health_assess_2025 <- read_csv("data/july_16_2025_Butternut Health Assessment Form (Responses).csv")
 
 
-## ----IGNORE = TRUE--------------------------------------------------------------------------------------------
+## ----IGNORE = TRUE--------------------------------------------------------------------------------
 # health_assess_2025 <- health_assess_2025 %>% slice(109)
 # health_assess_2025$`Any additional notes?`
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----remove_row-----------------------------------------------------------------------------------
 health_assess_2025 <- health_assess_2025 %>% select(
   -`Number of the 1st photo taken`,
   -`Number of the last photo taken`,
@@ -55,11 +55,11 @@ health_assess_2025 <- health_assess_2025 %>% select(
 )
 
 
-## ----message=FALSE--------------------------------------------------------------------------------------------
+## ----message=FALSE--------------------------------------------------------------------------------
 #colnames(health_assess_2025)
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----rename_basic---------------------------------------------------------------------------------
 # Plant Height (ft)
 health_assess_2025 <- health_assess_2025 %>% rename(plant_height_ft = `Plant Height (in FEET)`)
 
@@ -78,7 +78,7 @@ If there are no large cankers present, enter "NA." If there are large cankers pr
 health_assess_2025 <- health_assess_2025 %>% rename(seedling_y_n = `Is this individual a seedling?`)
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----renaming_percentages-------------------------------------------------------------------------
 # % live canopy
 health_assess_2025 <- health_assess_2025 %>% rename(percent_live_canopy = `Percent live canopy (estimate, being sure to only include live branches in assessment)
 
@@ -100,25 +100,21 @@ health_assess_2025 <- health_assess_2025 %>% rename(trunk_canker_area = `How muc
 health_assess_2025 <- health_assess_2025 %>% rename(base_canker_area = `How much area of the base/ root flare is infected by canker, e.g. as a percentage of root flare (up to 10 cm above soil) with cankers visible (including underneath bark)?`)
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----renaming_densio------------------------------------------------------------------------------
 # densio_north
 health_assess_2025 <- health_assess_2025 %>% rename(densio_north = North)
-densio_north_2025 <- health_assess_2025$densio_north
 
 # densio_south
 health_assess_2025 <- health_assess_2025 %>% rename(densio_south = South)
-densio_south_2025 <- health_assess_2025$densio_south
 
 # densio_east
 health_assess_2025 <- health_assess_2025 %>% rename(densio_east = East)
-densio_east_2025 <- health_assess_2025$densio_east
 
 # densio_west 
 health_assess_2025 <- health_assess_2025 %>% rename(densio_west = West)
-densio_west_2025 <- health_assess_2025$densio_west
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----renaming_cat---------------------------------------------------------------------------------
 # purdue_severity_canker
 health_assess_2025 <- health_assess_2025 %>% rename(purdue_severity_canker = `Assess severity of infection. Focus on the bottom 10 feet of the tree when assessing the number and size of cankers, noting that cankers can be hard to see on old trees with thick bark. CANKERS:`)
 
@@ -138,11 +134,11 @@ health_assess_2025 <- health_assess_2025 %>% rename(shape_lenticels = `Shape / l
 health_assess_2025 <- health_assess_2025 %>% rename(shape_hairs = `Hairs on the end of the twigs`)
 
 
-## ----message=FALSE--------------------------------------------------------------------------------------------
+## ----message=FALSE--------------------------------------------------------------------------------
 #colnames(health_assess_2025)
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----remove_individuals---------------------------------------------------------------------------
 # Testing columns (#15, 16, 34, 52, 71)
 ## 15, 16, 71 all explicitly state testing 
 ## 34 is a BLACK WALNUT
@@ -163,35 +159,16 @@ health_assess_2025 <- filter(
   
 
 
-## -------------------------------------------------------------------------------------------------------------
-# Fixing typing---------------------------------
-health_assess_2025$plant_height_ft <- 
-  as.numeric(health_assess_2025$plant_height_ft)
-health_assess_2025$dbh_cm <- as.numeric(health_assess_2025$dbh_cm)
-health_assess_2025$percent_live_canopy <- as.numeric(health_assess_2025$percent_live_canopy)
-
-#canker
-health_assess_2025$base_canker_area <- as.numeric(health_assess_2025$base_canker_area)
-health_assess_2025$trunk_canker_area <- as.numeric(health_assess_2025$trunk_canker_area)
-health_assess_2025$girdled_canker_circum <- as.numeric(health_assess_2025$girdled_canker_circum)
-
-#densio
-health_assess_2025$densio_east <- as.numeric(health_assess_2025$densio_east)
-health_assess_2025$densio_north <- as.numeric(health_assess_2025$densio_north)
-health_assess_2025$densio_south <- as.numeric(health_assess_2025$densio_south)
-health_assess_2025$densio_west <- as.numeric(health_assess_2025$densio_west)
-
-
-## ----message=FALSE--------------------------------------------------------------------------------------------
+## ----cleaning_canopy, message=FALSE---------------------------------------------------------------
 health_assess_2025$percent_live_canopy <- parse_number(health_assess_2025$percent_live_canopy)
 
 
-## -------------------------------------------------------------------------------------------------------------
+## -------------------------------------------------------------------------------------------------
 # test_canopy <- health_assess_2025 %>% select(percent_live_canopy) %>% mutate(clean_percent_live_canopy = parse_number(health_assess_2025$percent_live_canopy))
 # view(test_canopy)
 
 
-## ----message=FALSE--------------------------------------------------------------------------------------------
+## ----cleaning_canker_1, message=FALSE-------------------------------------------------------------
 health_assess_2025$base_canker_area <- parse_number(health_assess_2025$base_canker_area)
 
 # Right now, "Less than 10, but more than 0" just reads in as 10
@@ -201,7 +178,7 @@ health_assess_2025$trunk_canker_area <- parse_number(health_assess_2025$trunk_ca
 health_assess_2025$girdled_canker_circum <- parse_number(health_assess_2025$girdled_canker_circum)
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----cleaning_canker_2----------------------------------------------------------------------------
 # base_canker_test <- health_assess_2025 %>% select(base_canker_area) %>% mutate(cleaned_base_canker = parse_number(health_assess_2025$base_canker_area))
 # view(base_canker_test)
 # 
@@ -214,7 +191,7 @@ health_assess_2025$girdled_canker_circum <- parse_number(health_assess_2025$gird
 # view(girdled_canker_test)
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----cleaning_canker_3----------------------------------------------------------------------------
 health_assess_2025 <- health_assess_2025 %>% mutate(base_canker_area = if_else(has_canker == "No", 0, base_canker_area))
 
 health_assess_2025 <- health_assess_2025 %>% mutate(trunk_canker_area = if_else(has_canker == "No", 0, trunk_canker_area))
@@ -224,7 +201,7 @@ health_assess_2025$girdled_canker_circum_2025
 health_assess_2025 <- health_assess_2025 %>% mutate(girdled_canker_circum = if_else(has_canker == "No", 0, girdled_canker_circum))
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----cleaning_canker_4----------------------------------------------------------------------------
 # base_canker_adding_0s_test <- health_assess_2025 %>% select(has_canker, base_canker_area) %>% mutate(cleaned_base_canker = if_else(has_canker == "Yes", base_canker_area, 0))
 # view(base_canker_adding_0s_test)
 # 
@@ -235,7 +212,7 @@ health_assess_2025 <- health_assess_2025 %>% mutate(girdled_canker_circum = if_e
 # view(girdled_circum_adding_0s_test)
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----cleaning_DBH---------------------------------------------------------------------------------
 health_assess_2025 <- health_assess_2025 %>% mutate(
   # Clean up the text for consistency (e.g., remove extra spaces, make lowercase)
   height_str = str_to_lower(str_trim(dbh_cm)),
@@ -250,7 +227,7 @@ health_assess_2025 <- health_assess_2025 %>% mutate(
 ) %>% select(-height_str) # Only keep the new dbh value
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----cleaning_DBH_2-------------------------------------------------------------------------------
 # test_dbh <- health_assess_2025 %>% select(dbh_cm) %>% mutate(
 #   # Clean up the text for consistency (e.g., remove extra spaces, make lowercase)
 #   height_str = str_to_lower(str_trim(dbh_cm)),
@@ -266,7 +243,7 @@ health_assess_2025 <- health_assess_2025 %>% mutate(
 # view(test_dbh)
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----cleaning_height_1----------------------------------------------------------------------------
 health_assess_2025 <- health_assess_2025 %>% mutate(
   # Big picture height cleaning:
   #   * Assume in feet if no units are written into the box
@@ -315,7 +292,7 @@ health_assess_2025 <- health_assess_2025 %>% mutate(
 )
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----cleaning_height_2----------------------------------------------------------------------------
 # test_height_cleaning <- health_assess_2025 %>% select(plant_height_ft) %>% mutate(
 #   # Big picture height cleaning:
 #   #   * Assume in feet if no units are written into the box
@@ -354,7 +331,7 @@ health_assess_2025 <- health_assess_2025 %>% mutate(
 # view(test_height_cleaning)
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----cleaning_height_3----------------------------------------------------------------------------
 # Viewing subset of health_assess_2025 data
 view_height <- health_assess_2025 %>% select(`Plant Number (e.g. 4th tree assessed will be 4)`, dbh_cm, plant_height_ft, densio_north, `Any additional notes?`)
 
@@ -365,7 +342,7 @@ library(knitr)
 kable(slice(view_height, 1:20), , caption = "Comparison of heights to verify unitless entries were in feet")
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----cleaning_height_4----------------------------------------------------------------------------
 # Identified mistake with SH29's height. 
 # Based on photo evidence, the input of 62 feet into the datasheet must have been a mistake and treating the 62 as inches makes sense for that individual.
 
@@ -380,7 +357,7 @@ health_assess_2025 <- health_assess_2025 %>% mutate(plant_height_ft = recode(hea
 
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----cleaning_height_5----------------------------------------------------------------------------
 # test_adults_have_dbh <- health_assess_2025 %>% select(`Plant Number (e.g. 4th tree assessed will be 4)`, dbh_cm, plant_height_ft, seedling_y_n) %>% mutate(
 #   has_dbh = (!is.na(dbh_cm)),
 # )
@@ -388,7 +365,7 @@ health_assess_2025 <- health_assess_2025 %>% mutate(plant_height_ft = recode(hea
 # view(test_adults_have_dbh)
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----cleaning_height_6----------------------------------------------------------------------------
 # test_adults <- health_assess_2025 %>% select(`Plant Number (e.g. 4th tree assessed will be 4)`, densio_north, seedling_y_n) %>% mutate(
 #   is_seedling_with_densio = ((!is.na(densio_north)) & (seedling_y_n == "Yes"))
 # )
@@ -396,7 +373,7 @@ health_assess_2025 <- health_assess_2025 %>% mutate(plant_height_ft = recode(hea
 # view(test_adults)
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----cleaning_purdue_1----------------------------------------------------------------------------
 health_assess_2025 <- health_assess_2025 %>% mutate(
   purdue_severity_canker = recode(
     health_assess_2025$purdue_severity_canker,
@@ -409,7 +386,48 @@ health_assess_2025 <- health_assess_2025 %>% mutate(
 )
 
 
-## -------------------------------------------------------------------------------------------------------------
+## ----cleaning_densio------------------------------------------------------------------------------
+# North
+test_densio_cleaning <- health_assess_2025 %>% 
+  select(densio_north) %>% 
+  mutate(densio_north_cleaned = parse_number(health_assess_2025$densio_north))
+
+# Ordering with highest height at the top
+test_densio_cleaning <- test_densio_cleaning[order(test_densio_cleaning$densio_north_cleaned, decreasing = T), ]
+
+# # East
+# test_densio_cleaning <- health_assess_2025 %>%
+#   select(densio_east) %>%
+#   mutate(densio_east_cleaned = parse_number(health_assess_2025$densio_east))
+# 
+# # South
+# test_densio_cleaning <- health_assess_2025 %>%
+#   select(densio_south) %>%
+#   mutate(densio_south_cleaned = parse_number(health_assess_2025$densio_south))
+# 
+# # West
+# test_densio_cleaning <- health_assess_2025 %>%
+#   select(densio_west) %>%
+#   mutate(densio_west_cleaned = parse_number(health_assess_2025$densio_west))
+
+
+library(knitr)
+kable(slice(test_densio_cleaning, 1:50), , caption = "Comparison of cleaned densiometer readings to originals")
+
+
+## ----cleaning_densio_2----------------------------------------------------------------------------
+#densio
+health_assess_2025$densio_east <- parse_number(health_assess_2025$densio_east)
+health_assess_2025$densio_north <- parse_number(health_assess_2025$densio_north)
+health_assess_2025$densio_south <- parse_number(health_assess_2025$densio_south)
+health_assess_2025$densio_west <- parse_number(health_assess_2025$densio_west)
+
+
+## -------------------------------------------------------------------------------------------------
+health_assess_2025 <- health_assess_2025 %>% mutate(densio_average = ((densio_west + densio_east + densio_north + densio_south) / 4) * 1.04) 
+
+
+## ----results--------------------------------------------------------------------------------------
 library(knitr)
 kable(slice(health_assess_2025, 1:20), caption = "Cleaned and processed 2025 health assessment data")
 

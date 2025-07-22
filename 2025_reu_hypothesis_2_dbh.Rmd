@@ -4,7 +4,7 @@ output:
   html_document:
           toc: true
           toc_depth: 4
-date: "2025-07-15"
+date: "2025-07-21"
 ---
 
 # Hypothesis 2: Higher DBH will be correlated with a higher percentage of canker on the trunk and base
@@ -16,24 +16,24 @@ date: "2025-07-15"
 
 ## Importing 2024 & 2025 Data
 
-See the full code for the break down for the importing and cleaning open the documents of the same name.
+See the full code for the break down for the importing and cleaning open the documents of the same name. Or here: - [2024 cleaning code](https://rpubs.com/hankhelmers/cleaning_2024_health_form_data) and - [2025 cleaning code](https://rpubs.com/hankhelmers/cleaning_2025_health_form_data)
 
 ### Create the R files if needed.
 
 Purl (or stitch) together R code from the markdown cleaning files. These stitched files are stored in 'purl' folder with the date of the code purled.
 
-```{r EVAL=FALSE, IGNORE=TRUE}
-library(knitr)
-
-purl("cleaning_2024_health_form_data.Rmd", 
-     output = 
-       paste("purl/cleaning_2024_health_form_data",
-       Sys.Date(),".R"))
-
-purl("cleaning_2025_health_form_data.Rmd", 
-     output = 
-       paste("purl/cleaning_2025_health_form_data",
-       Sys.Date(),".R"))
+```{r purl_cleaning, EVAL=FALSE, IGNORE=TRUE}
+# library(knitr)
+# 
+# purl("cleaning_2024_health_form_data.Rmd", 
+#      output = 
+#        paste("purl/cleaning_2024_health_form_data",
+#        Sys.Date(),".R"))
+# 
+# purl("cleaning_2025_health_form_data.Rmd", 
+#      output = 
+#        paste("purl/cleaning_2025_health_form_data",
+#        Sys.Date(),".R"))
 ```
 
 ### Run the R files to get cleaned data
@@ -48,11 +48,34 @@ source(paste("purl/cleaning_2024_health_form_data", Sys.Date(), ".R"))
 source(paste("purl/cleaning_2025_health_form_data", Sys.Date(), ".R"))
 ```
 
+### Combining 2024 and 2025 data along canker area & DBH
+
+```{r combined_years, message=FALSE, warning=FALSE}
+library(dplyr)
+
+# Add a 'year' column to each dataset to allow grouping/plotting by year
+health_assess_2024 <- health_assess_2024 %>%
+  mutate(year = 2024)
+
+health_assess_2025 <- health_assess_2025 %>%
+  mutate(year = 2025)
+
+# Keep only the necessary columns for this hypothesis
+sliced_2024 <- health_assess_2024 %>%
+  select(year, dbh_cm, base_canker_area, trunk_canker_area) 
+
+sliced_2025 <- health_assess_2025 %>%
+  select(year, dbh_cm, base_canker_area, trunk_canker_area) 
+
+# Combine the two data frames
+combined_2024_2025 <- bind_rows(sliced_2024, sliced_2025) 
+```
+
 # Setup of Analysis
 
 This chunk defines a re-usable function to run a regression across multiple input datas.
 
-```{r define_hypoth2_analysis}
+```{r do_hypoth2_analysis, message=FALSE, warning=FALSE, COLLAPSE=TRUE}
 do_hypoth2_analysis <- function(data, predictor, response, xlabel, ylabel, color = "black") {
   # Define linear model
   model <- lm(reformulate(predictor, response), data = data)
@@ -127,29 +150,48 @@ do_hypoth2_analysis <- function(data, predictor, response, xlabel, ylabel, color
 
 # Data Analysis
 
-Here are the major delinations of questions across this hypotheses:
+Here are the major delineations of questions across this hypotheses: \* Done ? In-progress
 
 -   What patterns of DBH and canker areas do we see overall-- across all sites, years and age classes?
--   What patterns of DBH and canker areas do we see across years?
--   What patterns of DBH and canker areas do we see across seedlings?
--   What patterns of DBH and canker areas do we see across adults?
--   What patterns of DBH and canker areas do we see across sites?
+-   What patterns of DBH and canker areas do we see across years? \*
+-   What patterns of DBH and canker areas do we see across sites? ?
 
 Notably: \* I'd like to include both base and trunk canker area on the same graph; I think that could be very nice
 
 ## Patterns overall-- across all individuals (all sites, years, and age classes)
 
-```{r}
+```{r message=FALSE, warning=FALSE}
+library(scales)
 
-# Combining 2024 and 2025 data along canker area & DBH
-#combined_2024_2025 <- 
+hex <- hue_pal()(3)
+
+patterns_across_all_base <- do_hypoth2_analysis(
+  data = combined_2024_2025, 
+  predictor = "dbh_cm", 
+  response = "base_canker_area",
+  xlabel = "All Individuals DBH (cm)",
+  ylabel = "% of Base Canker Area",
+  color = hex[1]
+)
+patterns_across_all_base
+
+
+patterns_across_all_trunk <- do_hypoth2_analysis(
+  data = combined_2024_2025, 
+  predictor = "dbh_cm", 
+  response = "trunk_canker_area",
+  xlabel = "All Individuals DBH (cm)",
+  ylabel = "% of Trunk Canker Area",
+  color = hex[2]
+)
+patterns_across_all_trunk
 ```
 
 ## Patterns across years
 
 ### Patterns across 2025
 
-```{r run_2025_analysis, message=FALSE, warning=FALSE}
+```{r patterns_2025, message=FALSE, warning=FALSE}
 library(scales)
 
 hex <- hue_pal()(3)
@@ -158,7 +200,7 @@ patterns_across_2025_base <- do_hypoth2_analysis(
   data = health_assess_2025, 
   predictor = "dbh_cm", 
   response = "base_canker_area",
-  xlabel = "All 2025 Individuals DBH (cm)",
+  xlabel = "2025 Individuals DBH (cm)",
   ylabel = "% of Base Canker Area",
   color = hex[1]
 )
@@ -168,7 +210,7 @@ patterns_across_2025_trunk <- do_hypoth2_analysis(
   data = health_assess_2025, 
   predictor = "dbh_cm", 
   response = "trunk_canker_area",
-  xlabel = "All 2025 Individuals DBH (cm)",
+  xlabel = "2025 Individuals DBH (cm)",
   ylabel = "% of Trunk Canker Area",
   color = hex[2]
 )
@@ -177,8 +219,8 @@ patterns_across_2025_trunk
 patterns_across_2025_girdled <- do_hypoth2_analysis(
   data = health_assess_2025, 
   predictor = "dbh_cm", 
-  response = "girdled_canker_circum_2025",
-  xlabel = "All 2025 Individuals DBH (cm)",
+  response = "girdled_canker_circum",
+  xlabel = "2025 Individuals DBH (cm)",
   ylabel = "% of Circumference Girdled",
   color = hex[3]
 )
@@ -187,7 +229,7 @@ patterns_across_2025_girdled
 
 ### Patterns across 2024
 
-```{r message=FALSE, warning=FALSE}
+```{r patterns_2024, message=FALSE, warning=FALSE}
 library(scales)
 
 hex <- hue_pal()(3)
@@ -196,7 +238,7 @@ patterns_across_2024_base <- do_hypoth2_analysis(
   data = health_assess_2024, 
   predictor = "dbh_cm", 
   response = "base_canker_area",
-  xlabel = "All 2024 Individuals DBH (cm)",
+  xlabel = "2024 Individuals DBH (cm)",
   ylabel = "% of Base Canker Area",
   color = hex[1]
 )
@@ -206,37 +248,59 @@ patterns_across_2024_trunk <- do_hypoth2_analysis(
   data = health_assess_2024, 
   predictor = "dbh_cm", 
   response = "trunk_canker_area",
-  xlabel = "All 2024 Individuals DBH (cm)",
+  xlabel = "2024 Individuals DBH (cm)",
   ylabel = "% of Trunk Canker Area",
   color = hex[2]
 )
 patterns_across_2024_trunk
 ```
 
-## Patterns across sites
+## Patterns across sites ?
+
+-   Need to clean the data for the other sites before we can do this sections (07-21-2025)
 
 ------------------------------------------------------------------------
 
-## Results
+# Results
 
-### Girdled circumference: Negative correlation between DBH and % circumference girdled
+## Across all years, there is a positive correlation between base canker area and DBH, but no correlation with trunk canker area.
+
+```{r message=FALSE, warning=FALSE}
+library(patchwork)
+
+patterns_across_all_base + patterns_across_all_trunk 
+```
+
+## However, in 2024 alone, there were no correlations in either base or trunk canker areas and DBH.
+
+```{r results_1, message=FALSE, warning=FALSE}
+library(patchwork)
+
+patterns_across_2024_base + patterns_across_2024_trunk
+```
+
+## In 2025 data alone, we do see this positive correlation in base canker area. And a slight positive correlation with trunk canker area.
+
+```{r results_2, message=FALSE, warning=FALSE}
+patterns_across_2025_base + patterns_across_2025_trunk
+```
+
+## Across years: Appears to be an increase in DBH \~ Canker Area over 2024 and 2025.However, this could be a result of increasing our sample size almost two fold.
+
+```{r results_4, message=FALSE, warning=FALSE}
+(patterns_across_2024_base + patterns_across_2025_base) + plot_annotation("% Base Canker Area 2024 versus 2025")
+
+(patterns_across_2024_trunk + patterns_across_2025_trunk) + plot_annotation("% Trunk Canker Area 2024 versus 2025")
+```
+
+## 2025 Girdled circumference: Negative correlation between DBH and % circumference girdled
 
 This result would indicate that younger trees have slightly higher girdling.
 
 We may be seeing this trend due to an inaccuracy with attempting to estimate circumference on smaller trees.
 
-```{r message=FALSE}
+```{r results_3, message=FALSE, warning=FALSE}
 patterns_across_2025_girdled
-```
-
-### 2024 versus 2025: Appears to be an increase in DBH \~ Canker Area over 2024 and 2025.
-
-```{r message=FALSE}
-library(patchwork)
-
-(patterns_across_2024_base + patterns_across_2025_base) + plot_annotation("% Base Canker Area 2024 versus 2025")
-
-(patterns_across_2024_trunk + patterns_across_2025_trunk) + plot_annotation("% Trunk Canker Area 2024 versus 2025")
 ```
 
 # Future work
@@ -251,7 +315,6 @@ library(patchwork)
 # data <- health_assess_2025
 # predictor <- "dbh_cm"
 # response1 <- "base_canker_area"
-# response2 <- "trunk_canker_area"
 # 
 # long_data <- data %>%
 #   select(all_of(c(predictor, response1, response2))) %>%

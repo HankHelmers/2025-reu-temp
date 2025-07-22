@@ -1,0 +1,278 @@
+---
+title: "2025_reu_hypothesis_3_canopy"
+output: 
+  html_document:
+          toc: true
+          toc_depth: 4
+date: "2025-07-21"
+---
+
+# Hypothesis 3: Percent Live canopy will positively correlate with percent canker areas 
+- Variables: Canker area → Percent_live_canopy
+- Mechanism: On the one hand, you expect canker area on trunk to impact percent live canopy, so the mechanism is actually that these should correlate.  On the other hand we have seen numerous healthy trees in the canopy but highly diseased on the trunk and some trees with no canker spots but dead or fallen over; a priori prediction
+
+# Data Import
+<details>
+  <summary>Click for data import info</summary>
+## Importing 2024 & 2025 Data
+
+See the full code for the break down for the importing and cleaning open the documents of the same name. Or here: - [2024 cleaning code](https://rpubs.com/hankhelmers/cleaning_2024_health_form_data) and - [2025 cleaning code](https://rpubs.com/hankhelmers/cleaning_2025_health_form_data)
+
+### Create the R files if needed.
+
+Purl (or stitch) together R code from the markdown cleaning files. These stitched files are stored in 'purl' folder with the date of the code purled.
+
+```{r purl_cleaning, EVAL=FALSE, IGNORE=TRUE}
+# library(knitr)
+# 
+# purl("cleaning_2024_health_form_data.Rmd",
+#      output =
+#        paste("purl/cleaning_2024_health_form_data",
+#        Sys.Date(),".R"))
+# 
+# purl("cleaning_2025_health_form_data.Rmd",
+#      output =
+#        paste("purl/cleaning_2025_health_form_data",
+#        Sys.Date(),".R"))
+```
+
+### Run the R files to get cleaned data
+
+Next, we can run those extracted R files to actually import and clean the data.
+
+```{r message=FALSE, warning=FALSE}
+## 2024 data
+source(paste("purl/cleaning_2024_health_form_data", Sys.Date(), ".R"))
+
+## 2025 data
+source(paste("purl/cleaning_2025_health_form_data", Sys.Date(), ".R"))
+```
+
+### Combining 2024 and 2025 data along canker area & DBH
+
+```{r combined_years, message=FALSE, warning=FALSE}
+library(dplyr)
+
+# Add a 'year' column to each dataset to allow grouping/plotting by year
+health_assess_2024 <- health_assess_2024 %>%
+  mutate(year = 2024)
+
+health_assess_2025 <- health_assess_2025 %>%
+  mutate(year = 2025)
+
+# Keep only the necessary columns for this hypothesis
+sliced_2024 <- health_assess_2024 %>%
+  select(year, dbh_cm, percent_live_canopy, base_canker_area, trunk_canker_area, seedling_y_n) 
+
+sliced_2025 <- health_assess_2025 %>%
+  select(year, dbh_cm, percent_live_canopy, base_canker_area, trunk_canker_area, seedling_y_n) 
+
+# Combine the two data frames
+combined_2024_2025 <- bind_rows(sliced_2024, sliced_2025) 
+
+# Fixing the Y, N, Yes, No discrepancies in combined
+combined_2024_2025 <- combined_2024_2025 %>% mutate(seedling_y_n = if_else(seedling_y_n == "N", "No", seedling_y_n))
+combined_2024_2025 <- combined_2024_2025 %>% mutate(seedling_y_n = if_else(seedling_y_n == "Y", "Yes", seedling_y_n))
+```
+<details>
+
+# Setup of Analysis
+
+This chunk defines a re-usable function to run a regression across multiple input datas.
+
+```{r do_hypoth3_analysis, message=FALSE, warning=FALSE, COLLAPSE=TRUE}
+do_hypoth3_analysis <- function(data = combined_2024_2025, predictor, response, xlabel, ylabel, color = "black", color_points = "black") {
+  # Define linear model
+  model <- lm(reformulate(predictor, response), data = data)
+  coefs <- coef(model)
+  r_squared <- summary(model)$r.squared
+  
+  # Create equation and R^2 text
+  equation <- paste0("y = ", round(coefs[2], 2), "x + ", round(coefs[1], 2))
+  r2_text <- paste0("italic(R)^2 == ", round(r_squared, 4))
+  
+  # Get plotting ranges
+  max_x <- max(data[[predictor]], na.rm = TRUE)
+  
+  max_y <- max(data[[response]], na.rm = TRUE)
+  min_y <- min(data[[response]], na.rm = TRUE)
+  range_y <- max_y - min_y
+  
+  # Annotate sample size near the bottom-right
+  sample_size_y_position <- min_y + 0.08 * range_y
+  
+  # Annotate equation and r2 near the top-right
+  eq_y_position <- max_y - 0.05 * range_y
+  r2_y_position <- max_y - 0.12 * range_y
+  
+  # PLOT ------------------------------------------------------
+  ggplot(data, aes_string(x = predictor, y = response)) +
+    # Points
+    geom_point(aes_string(color = color_points)) +
+    
+    # Line of best fit
+    geom_smooth(method = "lm", color = color) +
+    
+    # Axes Label & Theme
+    labs(x = xlabel, y = ylabel) +  # Set the y-axis label
+    theme(
+      axis.title.x = element_text(color = color) # Change y-axis label color
+    ) + 
+    
+    # Samples size text
+    annotate(
+      "text", 
+      x = max_x,
+      y = sample_size_y_position,
+      label = paste("n = ", count(data)),
+      hjust = 1,
+      size = 6,
+      color = "black"
+    ) +
+    
+    # Equation and R^2 text
+    annotate(
+      "text",
+      x = max_x,
+      y = eq_y_position,
+      label = equation,
+      hjust = 1,
+      size = 4,
+      color = color
+    ) +
+    annotate(
+      "text",
+      x = max_x,
+      y = r2_y_position,
+      label = r2_text,
+      hjust = 1,
+      size = 4,
+      color = color,
+      parse = TRUE # Ensures that italics styling works
+    )
+}
+```
+
+# Data Analysis
+
+Here are the major delineations of questions across this hypotheses: \* Done ? In-progress
+
+# Hypothesis 3: Live canopy/severity of infection based on canopy will correlate with canker area 
+
+-   What patterns of live canopy and canker area do we see overall? \*
+-   What patterns of live canopy and canker area do we see across age classes? \*
+-   What patterns of live canopy and canker area do we see across years? ?
+-   What patterns of live canopy and canker area do we see across sites? ?
+
+## Patterns overall-- across all individuals (all sites, years, and age classes)
+
+```{r message=FALSE, warning=FALSE}
+library(scales)
+
+hex <- hue_pal()(5)
+
+patterns_across_all_base <- do_hypoth3_analysis(
+  data = combined_2024_2025, 
+  predictor = "base_canker_area", 
+  response = "percent_live_canopy",
+  xlabel = "% of Base Canker Area",
+  ylabel = "% Live Canopy",
+  color = hex[3],
+  color_points = "seedling_y_n"
+)
+patterns_across_all_base
+
+patterns_across_all_trunk <- do_hypoth3_analysis(
+  data = combined_2024_2025, 
+  predictor = "trunk_canker_area", 
+  response = "percent_live_canopy",
+  xlabel = "% of Trunk Canker Area",
+  ylabel = "% Live Canopy",
+  color = hex[4],
+  color_points = "seedling_y_n"
+)
+patterns_across_all_trunk
+```
+```{r}
+library(patchwork)
+
+(patterns_across_all_base + patterns_across_all_trunk) + plot_layout(guide = "collect")
+```
+
+## Patterns across seedlings versus adults
+
+### Seedlings
+```{r}
+library(scales)
+
+hex <- hue_pal()(5)
+
+seedlings_combined <- combined_2024_2025 %>% filter(is.na(dbh_cm))
+
+patterns_across_seedlings_base <- do_hypoth3_analysis(
+  data = seedlings_combined, 
+  predictor = "base_canker_area", 
+  response = "percent_live_canopy",
+  xlabel = "% of Base Canker Area in Seedlings",
+  ylabel = "% Live Canopy",
+  color = hex[3],
+  color_points = "seedling_y_n"
+)
+patterns_across_seedlings_base
+
+patterns_across_seedlings_trunk <- do_hypoth3_analysis(
+  data = seedlings_combined, 
+  predictor = "trunk_canker_area", 
+  response = "percent_live_canopy",
+  xlabel = "% of Trunk Canker Area in Seedlings",
+  ylabel = "% Live Canopy",
+  color = hex[4],
+  color_points = "seedling_y_n"
+)
+patterns_across_seedlings_trunk
+```
+
+```{r}
+library(patchwork)
+
+(patterns_across_seedlings_base + patterns_across_seedlings_trunk) + plot_layout(guide = "collect")
+```
+
+
+### Adults
+```{r}
+library(scales)
+
+hex <- hue_pal()(5)
+
+adults_combined <- combined_2024_2025 %>% filter(!is.na(dbh_cm))
+
+patterns_across_adults_base <- do_hypoth3_analysis(
+  data = adults_combined, 
+  predictor = "base_canker_area", 
+  response = "percent_live_canopy",
+  xlabel = "% of Base Canker Area in Adults",
+  ylabel = "% Live Canopy",
+  color = hex[3],
+  color_points = "seedling_y_n"
+)
+patterns_across_seedlings_base
+
+patterns_across_adults_trunk <- do_hypoth3_analysis(
+  data = adults_combined, 
+  predictor = "trunk_canker_area", 
+  response = "percent_live_canopy",
+  xlabel = "% of Trunk Canker Area in Adults",
+  ylabel = "% Live Canopy",
+  color = hex[4],
+  color_points = "seedling_y_n"
+)
+patterns_across_adults_trunk
+```
+
+```{r}
+library(patchwork)
+
+(patterns_across_adults_base + patterns_across_adults_trunk) + plot_layout(guide = "collect")
+```
+

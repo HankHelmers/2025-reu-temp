@@ -1,35 +1,16 @@
----
-title: "cleaning_2025_health_form_data"
-output: 
-  html_document:
-          toc: true
-          toc_depth: 4
-date: "2025-07-21"
----
-
-Here I go through the process of cleaning the 2025 Google Form entries.
-
-# Ready to go 2025 data (As of Cleaning Process for 07-17-2025, doesn't include ILM)
-
-# Import
-
-```{r import, message=FALSE}
+## ----import, message=FALSE--------------------------------------------------------------------
 library(tidyverse)
 library(readr)
 library(styler)
 health_assess_2025 <- read_csv("data/july_16_2025_Butternut Health Assessment Form (Responses).csv")
-```
 
-# Isolate Row
 
-```{r IGNORE = TRUE}
+## ----IGNORE = TRUE----------------------------------------------------------------------------
 # health_assess_2025 <- health_assess_2025 %>% slice(109)
 # health_assess_2025$`Any additional notes?`
-```
 
-# Removing unnecessary columns for now
 
-```{r remove_row}
+## ----remove_row-------------------------------------------------------------------------------
 health_assess_2025 <- health_assess_2025 %>% select(
   -`Number of the 1st photo taken`,
   -`Number of the last photo taken`,
@@ -72,19 +53,13 @@ health_assess_2025 <- health_assess_2025 %>% select(
   -`If edited, what date:`,
   -`If edited, what:`,
 )
-```
 
-```{r message=FALSE}
+
+## ----message=FALSE----------------------------------------------------------------------------
 #colnames(health_assess_2025)
-```
 
-# Renaming columns for readability & clarity
 
-*Note that this section will not work if the question wording has been changed since July 16th, 2025*
-
-## basic information
-
-```{r rename_basic}
+## ----rename_basic-----------------------------------------------------------------------------
 # Plant Height (ft)
 health_assess_2025 <- health_assess_2025 %>% rename(plant_height_ft = `Plant Height (in FEET)`)
 
@@ -101,11 +76,9 @@ If there are no large cankers present, enter "NA." If there are large cankers pr
 
 # seedling_y_n
 health_assess_2025 <- health_assess_2025 %>% rename(seedling_y_n = `Is this individual a seedling?`)
-```
 
-## % observations
 
-```{r renaming_percentages}
+## ----renaming_percentages---------------------------------------------------------------------
 # % live canopy
 health_assess_2025 <- health_assess_2025 %>% rename(percent_live_canopy = `Percent live canopy (estimate, being sure to only include live branches in assessment)
 
@@ -125,11 +98,9 @@ health_assess_2025 <- health_assess_2025 %>% rename(trunk_canker_area = `How muc
 
 # base_canker_area
 health_assess_2025 <- health_assess_2025 %>% rename(base_canker_area = `How much area of the base/ root flare is infected by canker, e.g. as a percentage of root flare (up to 10 cm above soil) with cankers visible (including underneath bark)?`)
-```
 
-## Densiometer
 
-```{r renaming_densio}
+## ----renaming_densio--------------------------------------------------------------------------
 # densio_north
 health_assess_2025 <- health_assess_2025 %>% rename(densio_north = North)
 
@@ -141,11 +112,9 @@ health_assess_2025 <- health_assess_2025 %>% rename(densio_east = East)
 
 # densio_west 
 health_assess_2025 <- health_assess_2025 %>% rename(densio_west = West)
-```
 
-## Categorical (purdue ratings, hybrid characters)
 
-```{r renaming_cat}
+## ----renaming_cat-----------------------------------------------------------------------------
 # purdue_severity_canker
 health_assess_2025 <- health_assess_2025 %>% rename(purdue_severity_canker = `Assess severity of infection. Focus on the bottom 10 feet of the tree when assessing the number and size of cankers, noting that cankers can be hard to see on old trees with thick bark. CANKERS:`)
 
@@ -163,21 +132,13 @@ health_assess_2025 <- health_assess_2025 %>% rename(shape_lenticels = `Shape / l
 
 # shape_hairs
 health_assess_2025 <- health_assess_2025 %>% rename(shape_hairs = `Hairs on the end of the twigs`)
-```
 
-```{r message=FALSE}
+
+## ----message=FALSE----------------------------------------------------------------------------
 #colnames(health_assess_2025)
-```
 
-Thoughts \* do all the canker areas correlate with each other \* does one of the canker areas correlate more with percent live canopy loss? \* I would hypothesize that girdled circumference area correlates more with
 
--   if canker doesn't correlate canopy based on percentages; then do the purdue signs follow same pattern?
-
-# Remove individuals from analysis (testing columns, irrelavent sites)
-
-\*\*\*\*THIS SHOULD PROBABLY BE OFF OF PLANT NUMBERS INSTEAD\*\*\*\*
-
-```{r remove_individuals}
+## ----remove_individuals-----------------------------------------------------------------------
 # Testing columns (#15, 16, 34, 52, 71)
 ## 15, 16, 71 all explicitly state testing 
 ## 34 is a BLACK WALNUT
@@ -196,30 +157,18 @@ health_assess_2025 <- filter(
   )
 )
   
-```
 
-# Cleaning individual variables
 
-## Percent live canopy
-
-### a. Removing %s from canopy entries
-
-```{r cleaning_canopy, message=FALSE}
+## ----cleaning_canopy, message=FALSE-----------------------------------------------------------
 health_assess_2025$percent_live_canopy <- parse_number(health_assess_2025$percent_live_canopy)
-```
 
-Run this to view the side by side cleaned numerical canopy values (after removing the %s)
 
-```{r}
+## ---------------------------------------------------------------------------------------------
 # test_canopy <- health_assess_2025 %>% select(percent_live_canopy) %>% mutate(clean_percent_live_canopy = parse_number(health_assess_2025$percent_live_canopy))
 # view(test_canopy)
-```
 
-## Canker areas (base, trunk, girdled circumference)
 
-### a. Removing %s from canker areas
-
-```{r cleaning_canker_1, message=FALSE}
+## ----cleaning_canker_1, message=FALSE---------------------------------------------------------
 health_assess_2025$base_canker_area <- parse_number(health_assess_2025$base_canker_area)
 
 # Right now, "Less than 10, but more than 0" just reads in as 10
@@ -227,11 +176,9 @@ health_assess_2025$trunk_canker_area <- parse_number(health_assess_2025$trunk_ca
 
 # Right now, "Less than 10, but more than 0" just reads in as 10
 health_assess_2025$girdled_canker_circum <- parse_number(health_assess_2025$girdled_canker_circum)
-```
 
-Run this to view the side by side cleaned numerical canker areas
 
-```{r cleaning_canker_2}
+## ----cleaning_canker_2------------------------------------------------------------------------
 # base_canker_test <- health_assess_2025 %>% select(base_canker_area) %>% mutate(cleaned_base_canker = parse_number(health_assess_2025$base_canker_area))
 # view(base_canker_test)
 # 
@@ -242,11 +189,9 @@ Run this to view the side by side cleaned numerical canker areas
 # # Right now, "Less than 10, but more than 0" just reads in as 10
 # girdled_canker_test <- health_assess_2025 %>% select(girdled_canker_circum_2025) %>% mutate(cleaned_girdled_canker = parse_number(health_assess_2025$girdled_canker_circum_2025))
 # view(girdled_canker_test)
-```
 
-### b. If 'has_canker' is NO then canker percentages (base/trunk/girdled) are 0.
 
-```{r cleaning_canker_3}
+## ----cleaning_canker_3------------------------------------------------------------------------
 health_assess_2025 <- health_assess_2025 %>% mutate(base_canker_area = if_else(has_canker == "No", 0, base_canker_area))
 
 health_assess_2025 <- health_assess_2025 %>% mutate(trunk_canker_area = if_else(has_canker == "No", 0, trunk_canker_area))
@@ -254,11 +199,9 @@ health_assess_2025 <- health_assess_2025 %>% mutate(trunk_canker_area = if_else(
 health_assess_2025$girdled_canker_circum_2025
 
 health_assess_2025 <- health_assess_2025 %>% mutate(girdled_canker_circum = if_else(has_canker == "No", 0, girdled_canker_circum))
-```
 
-Run this to view the side by side added 0s for NO
 
-```{r cleaning_canker_4}
+## ----cleaning_canker_4------------------------------------------------------------------------
 # base_canker_adding_0s_test <- health_assess_2025 %>% select(has_canker, base_canker_area) %>% mutate(cleaned_base_canker = if_else(has_canker == "Yes", base_canker_area, 0))
 # view(base_canker_adding_0s_test)
 # 
@@ -267,15 +210,9 @@ Run this to view the side by side added 0s for NO
 # 
 # girdled_circum_adding_0s_test <- health_assess_2025 %>% select(has_canker, girdled_canker_circum_2025) %>% mutate(cleaned_girdled_circum = if_else(has_canker == "Yes", girdled_canker_circum_2025, 0))
 # view(girdled_circum_adding_0s_test)
-```
 
-### c. Remove NAs if 'has_canker' is NA
 
-------------------------------------------------------------------------
-
-## DBH remove 'cm' text
-
-```{r cleaning_DBH}
+## ----cleaning_DBH-----------------------------------------------------------------------------
 health_assess_2025 <- health_assess_2025 %>% mutate(
   # Clean up the text for consistency (e.g., remove extra spaces, make lowercase)
   height_str = str_to_lower(str_trim(dbh_cm)),
@@ -288,11 +225,9 @@ health_assess_2025 <- health_assess_2025 %>% mutate(
   dbh_cm = as.numeric(str_extract(height_str, "\\d+\\.?\\d*")),
 
 ) %>% select(-height_str) # Only keep the new dbh value
-```
 
-Run this to test side-by-side 'cm' removal
 
-```{r cleaning_DBH_2}
+## ----cleaning_DBH_2---------------------------------------------------------------------------
 # test_dbh <- health_assess_2025 %>% select(dbh_cm) %>% mutate(
 #   # Clean up the text for consistency (e.g., remove extra spaces, make lowercase)
 #   height_str = str_to_lower(str_trim(dbh_cm)),
@@ -306,19 +241,9 @@ Run this to test side-by-side 'cm' removal
 # 
 # ) %>% select(-height_str) # Only keep the new dbh value
 # view(test_dbh)
-```
 
-## Height (Also adults & seedlings)
 
-These are related because I have to verify DBH by having an accurate height
-
-### a. Converting all the height texts into feet measurements
-
-#### 1. Conversions assuming unitless entries are feet.
-
-Many of the height entries were first inputted as "1 foot 3 inches", explicitly writing out the components. Instead, we want just a pure feet measurement in that column. So, I will extract the feet/foot numbers and inches and then convert those accordingly.
-
-```{r cleaning_height_1}
+## ----cleaning_height_1------------------------------------------------------------------------
 health_assess_2025 <- health_assess_2025 %>% mutate(
   # Big picture height cleaning:
   #   * Assume in feet if no units are written into the box
@@ -365,11 +290,9 @@ health_assess_2025 <- health_assess_2025 %>% mutate(
   -calculated_from_text_feet,
   -contains_text
 )
-```
 
-Run this to see the full break down off the calculation and extraction
 
-```{r cleaning_height_2}
+## ----cleaning_height_2------------------------------------------------------------------------
 # test_height_cleaning <- health_assess_2025 %>% select(plant_height_ft) %>% mutate(
 #   # Big picture height cleaning:
 #   #   * Assume in feet if no units are written into the box
@@ -406,17 +329,9 @@ Run this to see the full break down off the calculation and extraction
 # ) %>% select(plant_height_ft, plant_height_ft_cleaned)
 # 
 # view(test_height_cleaning)
-```
 
-#### 2. Verifying unitless entries were actually in feet.
 
-For the first case of translating height entries from text to numbers there were explicit units like "1 foot 3 inches." However, others lacked explicit units and were listed as "67."
-
-In our case, it would be easy to have accidently inputted inches because we were using a ruler for the seedlings. So, I went through and verified that the unitless entries were in fact in feet, and not inches, by accident.
-
-To do this, I viewed the new calculated heights alongside, dbh, densiometer and addditional notes:
-
-```{r cleaning_height_3}
+## ----cleaning_height_3------------------------------------------------------------------------
 # Viewing subset of health_assess_2025 data
 view_height <- health_assess_2025 %>% select(`Plant Number (e.g. 4th tree assessed will be 4)`, dbh_cm, plant_height_ft, densio_north, `Any additional notes?`)
 
@@ -425,13 +340,9 @@ view_height <- view_height[order(view_height$plant_height_ft, decreasing = T), ]
 
 library(knitr)
 kable(slice(view_height, 1:20), , caption = "Comparison of heights to verify unitless entries were in feet")
-```
 
-Notice that the plant with the apparent greatest height (SH29), also has a densiometer measure. We only took densiometer measures for seedlings. This leads me to believe that SH29's height was actually written inches, and thus was not 62 feet tall. I then confirmed that SH29 was a seedling with the [photos](https://drive.google.com/file/d/1iyqe9TmoBtRwWPFWAC9JuaVB8gfI8jWs/view).
 
-Thus, I seperately overrided SH29's height to be re-evaluated as inches:
-
-```{r cleaning_height_4}
+## ----cleaning_height_4------------------------------------------------------------------------
 # Identified mistake with SH29's height. 
 # Based on photo evidence, the input of 62 feet into the datasheet must have been a mistake and treating the 62 as inches makes sense for that individual.
 
@@ -444,44 +355,25 @@ health_assess_2025 <- health_assess_2025 %>% mutate(plant_height_ft = recode(hea
 #   height < 100 ~ height + 100
 # )
 
-```
 
-### b. Ensure that all trees \>4 feet tall have a DBH and are identified as an adult
 
--   We were not very consistent with our definitions of adult versus seedlings
--   It is not true that all trees \>4 feet have a DBH and are identified as an adult
--   My guess is that densiometer was the real way we decided whether it was an adult or not
--   We measured the dbh as 1 cm for a few of the seedlings / later began the basal diameter measurements, as well.
-
-```{r cleaning_height_5}
+## ----cleaning_height_5------------------------------------------------------------------------
 # test_adults_have_dbh <- health_assess_2025 %>% select(`Plant Number (e.g. 4th tree assessed will be 4)`, dbh_cm, plant_height_ft, seedling_y_n) %>% mutate(
 #   has_dbh = (!is.na(dbh_cm)),
 # )
 # 
 # view(test_adults_have_dbh)
-```
 
-### c. Does densiometer predict seedling or adult?
 
--   Only one individual identified as a seedling lacked a densiometer reading
-
-```{r cleaning_height_6}
+## ----cleaning_height_6------------------------------------------------------------------------
 # test_adults <- health_assess_2025 %>% select(`Plant Number (e.g. 4th tree assessed will be 4)`, densio_north, seedling_y_n) %>% mutate(
 #   is_seedling_with_densio = ((!is.na(densio_north)) & (seedling_y_n == "Yes"))
 # )
 # 
 # view(test_adults)
-```
 
-### d. If it has a DBH then it is an adult
 
-This was Emma and I's agreed upon definition as of July 17th, 2025
-
-## Purdue canker severity ratings (Canker & Canopy)
-
-Removes additional text description
-
-```{r cleaning_purdue_1}
+## ----cleaning_purdue_1------------------------------------------------------------------------
 health_assess_2025 <- health_assess_2025 %>% mutate(
   purdue_severity_canker = recode(
     health_assess_2025$purdue_severity_canker,
@@ -492,15 +384,9 @@ health_assess_2025 <- health_assess_2025 %>% mutate(
 "5. Tree almost dead, mostly inactive cankers with deep cracks to dead tissue." = "5"
   )
 )
-```
 
-## Densiometer
 
-### Retrieving the numbers from the rest of the columns
-
-#### Verify parsing is running correct
-******************** THIS CURRENTLY REMOVES THE ENTRIES MADE BEFORE ENFORCING NUMBERIC INPUT
-```{r cleaning_densio}
+## ----cleaning_densio--------------------------------------------------------------------------
 # North
 test_densio_cleaning <- health_assess_2025 %>% 
   select(densio_north) %>% 
@@ -527,27 +413,23 @@ test_densio_cleaning <- test_densio_cleaning[order(test_densio_cleaning$densio_n
 
 library(knitr)
 kable(slice(test_densio_cleaning, 1:50), , caption = "Comparison of cleaned densiometer readings to originals")
-```
 
-#### Commit parsing
 
-```{r cleaning_densio_2}
+## ----cleaning_densio_2------------------------------------------------------------------------
 #densio
 health_assess_2025$densio_east <- parse_number(health_assess_2025$densio_east)
 health_assess_2025$densio_north <- parse_number(health_assess_2025$densio_north)
 health_assess_2025$densio_south <- parse_number(health_assess_2025$densio_south)
 health_assess_2025$densio_west <- parse_number(health_assess_2025$densio_west)
-```
 
-#### Create average densiometer column
-```{r}
+
+## ---------------------------------------------------------------------------------------------
 health_assess_2025 <- health_assess_2025 %>% mutate(densio_average = ((densio_west + densio_east + densio_north + densio_south) / 4) * 1.04) 
 
 health_assess_2025 <- health_assess_2025 %>% mutate(canopy_density = 100 - densio_average)
-```
 
-#### Refactoring for data usability
-```{r}
+
+## ---------------------------------------------------------------------------------------------
 # health_long <- health_assess_2025 %>%
 #   mutate(case_id = row_number()) %>% 
 #   pivot_longer(
@@ -561,15 +443,11 @@ health_assess_2025 <- health_assess_2025 %>% mutate(canopy_density = 100 - densi
 #   pivot_longer(cols = starts_with("densio_"),
 #                names_to = "direction",
 #                values_to = "percent_cover")
-```
 
 
-
-# View results
-
-```{r results}
+## ----results----------------------------------------------------------------------------------
 library(knitr)
 kable(slice(health_assess_2025, 1:20), caption = "Cleaned and processed 2025 health assessment data")
 
 
-```
+

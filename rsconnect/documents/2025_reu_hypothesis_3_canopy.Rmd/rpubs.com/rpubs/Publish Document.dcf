@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/1331190/25c6d276dd7444098a6743c9ebad32b1
+bundleId: https://api.rpubs.com/api/v1/document/1331190/25c6d276dd7444098a6743c9ebad32b1
+url: http://rpubs.com/hankhelmers/1331190
+version: 1
