@@ -989,13 +989,15 @@ hist_densio_west <- health_assess_2025 %>% ggplot(aes(x = densio_west)) +
 hist_densio_west
 
 ```
+
+### Together
 ```{r}
 library(patchwork)
 
 empty <- plot_spacer()
 
 (
-  (empty +            hist_densio_west  + empty) /
+  (empty +            hist_densio_north  + empty) /
   (hist_densio_west + empty +             hist_densio_east) /
   (empty +            hist_densio_south + empty))
 

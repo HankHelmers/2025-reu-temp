@@ -82,16 +82,18 @@ This chunk defines a re-usable function to run a regression across multiple inpu
 
 ```{r do_hypoth3_analysis, message=FALSE, warning=FALSE, COLLAPSE=TRUE}
 do_hypoth3_analysis <- function(data = combined_2024_2025, predictor, response, xlabel, ylabel, color = "black", color_points = "black") {
-  # Define linear model
+  # Model: Define linear model
   model <- lm(reformulate(predictor, response), data = data)
   coefs <- coef(model)
   r_squared <- summary(model)$r.squared
+  p_value <- summary(model)$coefficients[2,4]   # pull p.value from linear regression model
   
-  # Create equation and R^2 text
+  # Text: Create equation and R^2 text
   equation <- paste0("y = ", round(coefs[2], 2), "x + ", round(coefs[1], 2))
   r2_text <- paste0("italic(R)^2 == ", round(r_squared, 4))
+  p_text <- paste0("p-value = ", round(p_value, 10))
   
-  # Get plotting ranges
+  # Position: Get plotting ranges
   max_x <- max(data[[predictor]], na.rm = TRUE)
   
   max_y <- max(data[[response]], na.rm = TRUE)
@@ -102,8 +104,9 @@ do_hypoth3_analysis <- function(data = combined_2024_2025, predictor, response, 
   sample_size_y_position <- min_y + 0.08 * range_y
   
   # Annotate equation and r2 near the top-right
-  eq_y_position <- max_y - 0.05 * range_y
-  r2_y_position <- max_y - 0.12 * range_y
+  p_y_position  <- max_y - 0.05 * range_y
+  eq_y_position <- max_y - 0.12 * range_y
+  r2_y_position <- max_y - 0.19 * range_y
   
   # PLOT ------------------------------------------------------
   ggplot(data, aes_string(x = predictor, y = response)) +
@@ -149,6 +152,16 @@ do_hypoth3_analysis <- function(data = combined_2024_2025, predictor, response, 
       size = 4,
       color = color,
       parse = TRUE # Ensures that italics styling works
+    ) + 
+    # P value text
+    annotate(
+      "text",
+      x = max_x,
+      y = p_y_position,
+      label = p_text,
+      hjust = 1,
+      size = 4,
+      color = color
     )
 }
 ```
@@ -164,15 +177,15 @@ Here are the major delineations of questions across this hypotheses: \* Done ? I
 -   What patterns of live canopy and canker area do we see across years? ?
 -   What patterns of live canopy and canker area do we see across sites? ?
 
-## Patterns overall-- across all individuals (all sites, years, and age classes)
+## Patterns overall in 2025
 
 ```{r message=FALSE, warning=FALSE}
 library(scales)
 
 hex <- hue_pal()(5)
 
-patterns_across_all_base <- do_hypoth3_analysis(
-  data = combined_2024_2025, 
+patterns_across_2025_base <- do_hypoth3_analysis(
+  data = health_assess_2025, 
   predictor = "base_canker_area", 
   response = "percent_live_canopy",
   xlabel = "% of Base Canker Area",
@@ -180,10 +193,10 @@ patterns_across_all_base <- do_hypoth3_analysis(
   color = hex[3],
   color_points = "seedling_y_n"
 )
-patterns_across_all_base
+patterns_across_2025_base
 
-patterns_across_all_trunk <- do_hypoth3_analysis(
-  data = combined_2024_2025, 
+patterns_across_2025_trunk <- do_hypoth3_analysis(
+  data = health_assess_2025, 
   predictor = "trunk_canker_area", 
   response = "percent_live_canopy",
   xlabel = "% of Trunk Canker Area",
@@ -191,12 +204,12 @@ patterns_across_all_trunk <- do_hypoth3_analysis(
   color = hex[4],
   color_points = "seedling_y_n"
 )
-patterns_across_all_trunk
+patterns_across_2025_trunk
 ```
 ```{r}
 library(patchwork)
 
-(patterns_across_all_base + patterns_across_all_trunk) + plot_layout(guide = "collect")
+(patterns_across_2025_base + patterns_across_2025_trunk) + plot_layout(guide = "collect")
 ```
 
 ## Patterns across seedlings versus adults
@@ -207,7 +220,7 @@ library(scales)
 
 hex <- hue_pal()(5)
 
-seedlings_combined <- combined_2024_2025 %>% filter(is.na(dbh_cm))
+seedlings_combined <- health_assess_2025 %>% filter(is.na(dbh_cm))
 
 patterns_across_seedlings_base <- do_hypoth3_analysis(
   data = seedlings_combined, 
@@ -235,7 +248,8 @@ patterns_across_seedlings_trunk
 ```{r}
 library(patchwork)
 
-(patterns_across_seedlings_base + patterns_across_seedlings_trunk) + plot_layout(guide = "collect")
+seedlings_2025 <- (patterns_across_seedlings_base + patterns_across_seedlings_trunk) + plot_layout(guide = "collect")
+seedlings_2025
 ```
 
 
@@ -245,24 +259,24 @@ library(scales)
 
 hex <- hue_pal()(5)
 
-adults_combined <- combined_2024_2025 %>% filter(!is.na(dbh_cm))
+adults_combined <- health_assess_2025 %>% filter(!is.na(dbh_cm))
 
 patterns_across_adults_base <- do_hypoth3_analysis(
   data = adults_combined, 
   predictor = "base_canker_area", 
   response = "percent_live_canopy",
-  xlabel = "% of Base Canker Area in Adults",
+  xlabel = "% of Base Canker Area in 2025 Adults",
   ylabel = "% Live Canopy",
   color = hex[3],
   color_points = "seedling_y_n"
 )
-patterns_across_seedlings_base
+patterns_across_adults_base
 
 patterns_across_adults_trunk <- do_hypoth3_analysis(
   data = adults_combined, 
   predictor = "trunk_canker_area", 
   response = "percent_live_canopy",
-  xlabel = "% of Trunk Canker Area in Adults",
+  xlabel = "% of Trunk Canker Area in 2025 Adults",
   ylabel = "% Live Canopy",
   color = hex[4],
   color_points = "seedling_y_n"
@@ -273,6 +287,22 @@ patterns_across_adults_trunk
 ```{r}
 library(patchwork)
 
-(patterns_across_adults_base + patterns_across_adults_trunk) + plot_layout(guide = "collect")
+adults_2025 <- (patterns_across_adults_base + patterns_across_adults_trunk) + plot_layout(guide = "collect")
+adults_2025
 ```
+
+# Results
+
+## In 2025, seedlings show no relationship between either canker areas and canopy.
+```{r include=FALSE}
+seedlings_2025
+```
+
+## However, 2025 adults show a week negative relationship between both canker areas and percent live canopy. 
+```{r include=FALSE}
+adults_2025
+```
+
+# Discussion as of 07-22-2025
+On July 22nd, 2025, Sean, Emma and Hank discussed these results during [this meeting](https://docs.google.com/document/d/15xoUURPlGVqyw3vhbF4yVGhUSl-gvz_8IQJsIq6DNAM/edit?tab=t.0), these are the highlights:
 
