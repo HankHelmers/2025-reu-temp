@@ -86,19 +86,18 @@ This chunk defines a re-usable function to run a regression across multiple inpu
 
 ```{r do_hypoth7_analysis, message=FALSE, warning=FALSE, COLLAPSE=TRUE}
 do_hypoth7_analysis <- function(data, predictor, response, xlabel, ylabel, color = "black") {
-  # EXPLICIT REMOVING NAs
-  na.omit(data) 
-  
-  # Define linear model
+  # Model: Define linear model
   model <- lm(reformulate(predictor, response), data = data)
   coefs <- coef(model)
   r_squared <- summary(model)$r.squared
+  p_value <- summary(model)$coefficients[2,4]   # pull p.value from linear regression model
   
-  # Create equation and R^2 text
+  # Text: Create equation and R^2 text
   equation <- paste0("y = ", round(coefs[2], 2), "x + ", round(coefs[1], 2))
   r2_text <- paste0("italic(R)^2 == ", round(r_squared, 4))
+  p_text <- paste0("p-value = ", round(p_value, 10))
   
-  # Get plotting ranges
+  # Position: Get plotting ranges
   max_x <- max(data[[predictor]], na.rm = TRUE)
   
   max_y <- max(data[[response]], na.rm = TRUE)
@@ -109,8 +108,9 @@ do_hypoth7_analysis <- function(data, predictor, response, xlabel, ylabel, color
   sample_size_y_position <- min_y + 0.08 * range_y
   
   # Annotate equation and r2 near the top-right
-  eq_y_position <- max_y - 0.05 * range_y
-  r2_y_position <- max_y - 0.12 * range_y
+  p_y_position  <- max_y - 0.05 * range_y
+  eq_y_position <- max_y - 0.12 * range_y
+  r2_y_position <- max_y - 0.19 * range_y
   
   # PLOT ------------------------------------------------------
   ggplot(data, aes_string(x = predictor, y = response)) +
@@ -123,7 +123,7 @@ do_hypoth7_analysis <- function(data, predictor, response, xlabel, ylabel, color
     # Axes Label & Theme
     labs(x = xlabel, y = ylabel) +  # Set the y-axis label
     theme(
-      axis.title.y = element_text(color = color) # Change y-axis label color
+      axis.title.x = element_text(color = color) # Change y-axis label color
     ) + 
     
     # Samples size text
@@ -156,6 +156,16 @@ do_hypoth7_analysis <- function(data, predictor, response, xlabel, ylabel, color
       size = 4,
       color = color,
       parse = TRUE # Ensures that italics styling works
+    )+ 
+    # P value text
+    annotate(
+      "text",
+      x = max_x,
+      y = p_y_position,
+      label = p_text,
+      hjust = 1,
+      size = 4,
+      color = color
     )
 }
 ```

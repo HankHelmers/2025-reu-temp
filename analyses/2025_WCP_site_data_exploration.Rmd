@@ -33,21 +33,76 @@ source(paste("purl/cleaning_2025_health_form_data", Sys.Date(), ".R"))
 
 # Select only the WCP data
 ```{r}
-health_assess_2025 <- health_assess_2025 %>% slice(1:66)
+library(tidyverse)
+bar_seedlings <- health_assess_2025 %>% ggplot(aes(x = `Site Number or Initial: JC-W-_______`)) +
+  geom_bar(aes(fill = `Site Number or Initial: JC-W-_______`)) + 
+  xlab("2025 Sites Y/N")
+
+
+
+
+bar_seedlings
+# health_assess_2025 <- health_assess_2025 %>% slice(1:66)
 ```
 
 # Data exploration
 * Need to include girdled circum
+
+## Site 
+```{r}
+total_individuals <- nrow(health_assess_2025)
+
+site_bar <- health_assess_2025 %>%
+  ggplot(aes(x = site_name)) +
+  geom_bar(aes(fill = site_name)) +
+  ylim(0, 80) +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -0.5, size = 8) +  # size 8 ≈ 24 pt
+  xlab("Trees surveyed in 2025 by Site") +
+  ylab("# of individuals assessed")
+  # ggtitle("Individuals per Site", subtitle = paste("Total individuals:", total_individuals)) +
+  theme_minimal(base_size = 24) +  # base text size
+  theme(
+    axis.text = element_text(size = 24),
+    axis.title = element_text(size = 24),
+    legend.text = element_text(size = 20),
+    legend.title = element_text(size = 20),
+    plot.title = element_text(size = 28, face = "bold"),
+    plot.subtitle = element_text(size = 24)
+  )+ theme(legend.position = "none")
+
+site_bar
+```
+
 
 ## Proportion of seedlings
 * NAs are from the first few days where we didn't include the seedling question yet; we could adjust these
 ```{r}
 bar_seedlings <- health_assess_2025 %>% ggplot(aes(x = seedling_y_n)) +
   geom_bar(aes(fill = seedling_y_n)) + 
-  xlab("2025 WCP Seedlings Y/N")
+  theme_bw() + 
+  ylim(0, 90) + 
+  geom_text(stat = "count", aes(label = ..count..), vjust = -0.5, size = 8) +  # size 8 ≈ 24 pt
+  xlab("2025 Seedlings Y/N")
 
 bar_seedlings
 ```
+
+## Producing seeds
+```{r}
+subset_seed_and_adults <- health_assess_2025 %>% filter(!is.na(producing_seed)) %>% filter(!is.na(dbh_cm))
+
+print(subset_seed_and_adults %>% filter(producing_seed == "Yes") %>% select(plant_number))
+
+bar_producing_seeds <- subset_seed_and_adults %>% ggplot(aes(x = producing_seed)) +
+  geom_bar(aes(fill = producing_seed)) + 
+  theme_bw() + 
+  geom_text(stat = "count", aes(label = ..count..), vjust = -0.5, size = 8) +  # size 8 ≈ 24 pt
+  ylim(0, 60) + 
+  xlab("2025 Producing Seeds Y/N")
+
+bar_producing_seeds
+```
+
 
 ## Plant Height
 ** Would love to fix the seedling/adult coloring
@@ -60,11 +115,13 @@ library(patchwork)
 mean_plant_height <- mean(health_assess_2025$plant_height_ft, na.rm = TRUE)
 median_plant_height <- median(health_assess_2025$plant_height_ft, na.rm = TRUE)
 print(mean_plant_height)
+print(median_plant_height)
 
-hist_plant_height <- health_assess_2025 %>% ggplot(aes(x = health_assess_2025$plant_height_ft)) +
+hist_plant_height <- health_assess_2025 %>% ggplot(aes(x = na.omit(plant_height_ft))) +
   geom_histogram(bins = 30, aes(fill = seedling_y_n)) +
-  xlab("2025 WCP All Individuals")
+  xlab("Height (ft)") + 
   ylab("Number of Individuals") +
+  ggtitle("2025 All Individuals") + 
   # Mean
   geom_vline(
     aes(xintercept = mean_plant_height),
@@ -485,8 +542,13 @@ health_assess_2025 <- health_assess_2025 %>% mutate(
   )
 )
 
+has_canker_sub <- health_assess_2025 %>% filter(has_canker == 'Yes')
+count(has_canker_sub) # 114
+count(health_assess_2025) # 146
+
 bar_has_canker_2025 <- health_assess_2025 %>% ggplot(aes(x = has_canker)) +
-  geom_bar( aes(fill = purdue_severity_canker))
+  geom_bar(aes(fill = seedling_y_n))
+bar_has_canker_2025
 
 bar_has_callous_2025 <- health_assess_2025 %>% ggplot(aes(x = has_callous)) +
   geom_bar( aes(fill = purdue_severity_canker))
@@ -834,7 +896,7 @@ individual_spagetti_quartile <- seedling_health_long %>% ggplot(aes(x = directio
     x = "Cardinal Direction",
     y = "% Open on Densiometer"
   )
-individual_spagetti
+individual_spagetti_quartile
 ```
 
 

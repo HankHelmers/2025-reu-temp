@@ -25,13 +25,13 @@ Purl (or stitch) together R code from the markdown cleaning files. These stitche
 ```{r purl_cleaning, EVAL=FALSE, IGNORE=TRUE}
 # library(knitr)
 # 
-# purl("cleaning_2024_health_form_data.Rmd", 
-#      output = 
+# purl("cleaning_2024_health_form_data.Rmd",
+#      output =
 #        paste("purl/cleaning_2024_health_form_data",
 #        Sys.Date(),".R"))
 # 
-# purl("cleaning_2025_health_form_data.Rmd", 
-#      output = 
+# purl("cleaning_2025_health_form_data.Rmd",
+#      output =
 #        paste("purl/cleaning_2025_health_form_data",
 #        Sys.Date(),".R"))
 ```
@@ -71,11 +71,20 @@ sliced_2025 <- health_assess_2025 %>%
 combined_2024_2025 <- bind_rows(sliced_2024, sliced_2025) 
 ```
 
+### Select for Adults only due to DBH
+```{r}
+health_assess_2025 <- health_assess_2025 %>% filter(!is.na(dbh_cm))
+```
+
+
 # Setup of Analysis
 
 This chunk defines a re-usable function to run a regression across multiple input datas.
 
 ```{r do_hypoth2_analysis, message=FALSE, warning=FALSE, COLLAPSE=TRUE}
+library(tidyverse)
+library(dplyr)
+
 do_hypoth2_analysis <- function(data, predictor, response, xlabel, ylabel, color = "black") {
   # Define linear model
   model <- lm(reformulate(predictor, response), data = data)
@@ -86,8 +95,8 @@ do_hypoth2_analysis <- function(data, predictor, response, xlabel, ylabel, color
   
   # Create equation and R^2 text
   equation <- paste0("y = ", round(coefs[2], 2), "x + ", round(coefs[1], 2))
-  r2_text <- paste0("italic(R)^2 == ", round(r_squared, 4))
-  p_text <- paste0("p-value = ", round(p_value, 4))
+  r2_text <- paste0("italic(R)^2 == ", round(r_squared, 3))
+  p_text <- paste0("p-value = ", round(p_value, 3))
   
   # Get plotting ranges
   max_x <- max(data[[predictor]], na.rm = TRUE)
@@ -101,55 +110,61 @@ do_hypoth2_analysis <- function(data, predictor, response, xlabel, ylabel, color
   
   # Annotate equation and r2 near the top-right
   p_y_position  <- max_y - 0.05 * range_y
-  eq_y_position <- max_y - 0.12 * range_y
-  r2_y_position <- max_y - 0.19 * range_y
+  #eq_y_position <- max_y - 0.12 * range_y
+  r2_y_position <- max_y - 0.15 * range_y
   
   # PLOT ------------------------------------------------------
   ggplot(data, aes_string(x = predictor, y = response)) +
     # Points
-    geom_point(color = color) +
+    geom_point(color = color, size = 3, alpha=0.75) +
+    theme_bw() + 
+    xlim(0, 80) + 
+    ylim(0, 100) + 
     
     # Line of best fit
-    geom_smooth(method = "lm", color = color) +
+    #geom_smooth(method = "lm", color = color, se = F) +
     
     # Axes Label & Theme
     labs(x = xlabel, y = ylabel) +  # Set the y-axis label
     theme(
-      axis.title.y = element_text(color = color) # Change y-axis label color
-    ) + 
-    
+      axis.title.x = element_text(size = 16),
+      axis.title.y = element_text(size = 16, color = color),
+      axis.text = element_text(size = 14)
+    ) +
+
     # Samples size text
     annotate(
-      "text", 
+      "text",
       x = max_x,
       y = sample_size_y_position,
       label = paste("n = ", count(data)),
       hjust = 1,
       size = 6,
       color = "black"
-    ) +
-    
-    # Equation and R^2 text
-    annotate(
-      "text",
-      x = max_x,
-      y = eq_y_position,
-      label = equation,
-      hjust = 1,
-      size = 4,
-      color = color
-    ) +
-    annotate(
-      "text",
-      x = max_x,
-      y = r2_y_position,
-      label = r2_text,
-      hjust = 1,
-      size = 4,
-      color = color,
-      parse = TRUE # Ensures that italics styling works
     ) + 
-  
+
+    # #Equation 
+    # annotate(
+    #   "text",
+    #   x = max_x,
+    #   y = eq_y_position,
+    #   label = equation,
+    #   hjust = 1,
+    #   size = 4,
+    #   color = color
+    # ) +
+    # R^2 text
+    # annotate(
+    #   "text",
+    #   x = max_x,
+    #   y = r2_y_position,
+    #   label = r2_text,
+    #   hjust = 1,
+    #   size = 6,
+    #   color = color,
+    #   parse = TRUE # Ensures that italics styling works
+    # ) +
+
     # P value text
     annotate(
       "text",
@@ -157,7 +172,7 @@ do_hypoth2_analysis <- function(data, predictor, response, xlabel, ylabel, color
       y = p_y_position,
       label = p_text,
       hjust = 1,
-      size = 4,
+      size = 6,
       color = color
     )
 }
@@ -211,28 +226,30 @@ library(scales)
 
 hex <- hue_pal()(3)
 
+adults_2025 <- health_assess_2025 %>% filter(!is.na(dbh_cm))
+
 patterns_across_2025_base <- do_hypoth2_analysis(
-  data = health_assess_2025, 
+  data = adults_2025, 
   predictor = "dbh_cm", 
   response = "base_canker_area",
-  xlabel = "2025 Individuals DBH (cm)",
+  xlabel = "DBH (cm) in 2025 Adults",
   ylabel = "% of Base Canker Area",
   color = hex[1]
 )
 patterns_across_2025_base
 
 patterns_across_2025_trunk <- do_hypoth2_analysis(
-  data = health_assess_2025, 
+  data = adults_2025, 
   predictor = "dbh_cm", 
   response = "trunk_canker_area",
-  xlabel = "2025 Individuals DBH (cm)",
+  xlabel = "Diameter at breast height (cm)",
   ylabel = "% of Trunk Canker Area",
-  color = hex[2]
+  color = "#FF8E00"
 )
 patterns_across_2025_trunk
 
 patterns_across_2025_girdled <- do_hypoth2_analysis(
-  data = health_assess_2025, 
+  data = adults_2025, 
   predictor = "dbh_cm", 
   response = "girdled_canker_circum",
   xlabel = "2025 Individuals DBH (cm)",
@@ -270,23 +287,12 @@ patterns_across_2024_trunk <- do_hypoth2_analysis(
 patterns_across_2024_trunk
 ```
 
-## Patterns across sites ?
-
--   Need to clean the data for the other sites before we can do this sections (07-21-2025)
 
 ------------------------------------------------------------------------
 
 # Results
 
-## Across all years, there is a positive correlation between base canker area and DBH, but no correlation with trunk canker area.
-
-```{r message=FALSE, warning=FALSE}
-library(patchwork)
-
-patterns_across_all_base + patterns_across_all_trunk 
-```
-
-## However, in 2024 alone, there were no correlations in either base or trunk canker areas and DBH.
+## In 2024 alone, there were no correlations in either base or trunk canker areas and DBH.
 
 ```{r results_1, message=FALSE, warning=FALSE}
 library(patchwork)
@@ -294,7 +300,8 @@ library(patchwork)
 patterns_across_2024_base + patterns_across_2024_trunk
 ```
 
-## In 2025 data alone, we do see this positive correlation in base canker area. And a slight positive correlation with trunk canker area.
+
+## In 2025 alone, there were no correlations in either base or trunk canker areas and DBH.
 
 ```{r results_2, message=FALSE, warning=FALSE}
 patterns_across_2025_base + patterns_across_2025_trunk
@@ -308,15 +315,14 @@ patterns_across_2025_base + patterns_across_2025_trunk
 (patterns_across_2024_trunk + patterns_across_2025_trunk) + plot_annotation("% Trunk Canker Area 2024 versus 2025")
 ```
 
-## 2025 Girdled circumference: Negative correlation between DBH and % circumference girdled
-
-This result would indicate that younger trees have slightly higher girdling.
-
-We may be seeing this trend due to an inaccuracy with attempting to estimate circumference on smaller trees.
+## 2025 Girdled circumference: No correlation between canker area and DBH
 
 ```{r results_3, message=FALSE, warning=FALSE}
 patterns_across_2025_girdled
 ```
+
+
+
 
 # Future work
 

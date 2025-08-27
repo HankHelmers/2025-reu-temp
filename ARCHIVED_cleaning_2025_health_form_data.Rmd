@@ -17,7 +17,7 @@ Here I go through the process of cleaning the 2025 Google Form entries.
 library(tidyverse)
 library(readr)
 library(styler)
-health_assess_2025 <- read_csv("data/july_16_2025_Butternut Health Assessment Form (Responses).csv")
+health_assess_2025 <- read_csv("data/july_23_2025_Butternut Health Assessment Form (Responses).csv")
 ```
 
 # Isolate Row
@@ -33,7 +33,6 @@ health_assess_2025 <- read_csv("data/july_16_2025_Butternut Health Assessment Fo
 health_assess_2025 <- health_assess_2025 %>% select(
   -`Number of the 1st photo taken`,
   -`Number of the last photo taken`,
-  -`Producing seed?`,
   -`Roughly how many seeds are on the tree?`,
   -`How many seed are in each bunch (average estimate)?`,
   -`What is the crown class of this individual?`,
@@ -85,6 +84,15 @@ health_assess_2025 <- health_assess_2025 %>% select(
 ## basic information
 
 ```{r rename_basic}
+# Site Name
+health_assess_2025 <- health_assess_2025 %>% rename(site_name = `Site Number or Initial: JC-W-_______`)
+
+# Producing seeds
+health_assess_2025 <- health_assess_2025 %>% rename(producing_seed = `Producing seed?`)
+
+# Plant Numbers
+health_assess_2025 <- health_assess_2025 %>% rename(plant_number = `Plant Number (e.g. 4th tree assessed will be 4)`)
+
 # Plant Height (ft)
 health_assess_2025 <- health_assess_2025 %>% rename(plant_height_ft = `Plant Height (in FEET)`)
 
@@ -182,7 +190,24 @@ Thoughts \* do all the canker areas correlate with each other \* does one of the
 ## 15, 16, 71 all explicitly state testing 
 ## 34 is a BLACK WALNUT
 ## 52 has unspecific GPS points making me think it is also a testing from when we make it numerical only
-health_assess_2025 <- health_assess_2025 %>% slice(c(-15, -16, -34, -52, -71))
+
+## TEMP REMOVAL
+## 18, 19 -- SH37 repeated
+
+# health_assess_2025 <- health_assess_2025 %>% select(`Site Number or Initial: JC-W-_______`, plant_number, `Any additional notes?`)
+# 
+health_assess_2025$plant_number <- parse_number(health_assess_2025$plant_number)
+
+health_assess_2025 <- health_assess_2025 %>% slice(c(-15, -16, -34, -52, -71,
+                                                     # DEAD TREES
+                                                     -39, -113, -114, -117,
+                                                     -119, -125, -126, -128, 
+                                                     -132, -140, -142, -170
+                                                     
+                                                     # TEMP REMOVALS   
+                                                     -18, -19))
+
+
 
 # Remove 'Suger River' site from analysis
 health_assess_2025 <- filter(
@@ -190,7 +215,7 @@ health_assess_2025 <- filter(
   
   # Notice that its selecting sites which are NOT sugar river
   !str_equal(
-    `Site Number or Initial: JC-W-_______`,
+    site_name,
     "Sugar river",
     ignore_case = TRUE
   )
@@ -199,6 +224,28 @@ health_assess_2025 <- filter(
 ```
 
 # Cleaning individual variables
+
+## Site Name
+
+```{r}
+
+
+library(dplyr)
+
+health_assess_2025 <- health_assess_2025 %>%
+  mutate(site_name = case_when(
+    site_name == "Cpvt" ~ "CPVT",
+    site_name == "SH" ~ "WCP",
+    site_name == "SH46" ~ "WCP",
+    site_name == "WCP-SH" ~"WCP",
+    site_name == "WCP - SH" ~ "WCP",
+    site_name == "ILM" ~ "Vermont 1",
+    site_name == "CPVT" ~ "Vermont 2",
+    site_name == "WCP" ~ "Chicago Site",
+    TRUE ~ site_name  # Keep unchanged values
+  ))
+```
+
 
 ## Percent live canopy
 
@@ -418,7 +465,7 @@ To do this, I viewed the new calculated heights alongside, dbh, densiometer and 
 
 ```{r cleaning_height_3}
 # Viewing subset of health_assess_2025 data
-view_height <- health_assess_2025 %>% select(`Plant Number (e.g. 4th tree assessed will be 4)`, dbh_cm, plant_height_ft, densio_north, `Any additional notes?`)
+view_height <- health_assess_2025 %>% select(plant_number, dbh_cm, plant_height_ft, densio_north, `Any additional notes?`)
 
 # Ordering with highest height at the top
 view_height <- view_height[order(view_height$plant_height_ft, decreasing = T), ]

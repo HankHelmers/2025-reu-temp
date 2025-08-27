@@ -81,6 +81,9 @@ combined_2024_2025 <- combined_2024_2025 %>% mutate(seedling_y_n = if_else(seedl
 This chunk defines a re-usable function to run a regression across multiple input datas.
 
 ```{r do_hypoth3_analysis, message=FALSE, warning=FALSE, COLLAPSE=TRUE}
+library(tidyverse)
+library(dplyr)
+
 do_hypoth3_analysis <- function(data = combined_2024_2025, predictor, response, xlabel, ylabel, color = "black", color_points = "black") {
   # Model: Define linear model
   model <- lm(reformulate(predictor, response), data = data)
@@ -90,8 +93,8 @@ do_hypoth3_analysis <- function(data = combined_2024_2025, predictor, response, 
   
   # Text: Create equation and R^2 text
   equation <- paste0("y = ", round(coefs[2], 2), "x + ", round(coefs[1], 2))
-  r2_text <- paste0("italic(R)^2 == ", round(r_squared, 4))
-  p_text <- paste0("p-value = ", round(p_value, 10))
+  r2_text <- paste0("italic(R)^2 == ", round(r_squared, 3))
+  p_text <- paste0("p-value = ", round(p_value, 3))
   
   # Position: Get plotting ranges
   max_x <- max(data[[predictor]], na.rm = TRUE)
@@ -104,14 +107,17 @@ do_hypoth3_analysis <- function(data = combined_2024_2025, predictor, response, 
   sample_size_y_position <- min_y + 0.08 * range_y
   
   # Annotate equation and r2 near the top-right
-  p_y_position  <- max_y - 0.05 * range_y
-  eq_y_position <- max_y - 0.12 * range_y
-  r2_y_position <- max_y - 0.19 * range_y
+  p_y_position  <- min_y + 0.28 * range_y
+  # eq_y_position <- min_y + 0.21 * range_y
+  r2_y_position <- min_y + 0.21 * range_y
   
   # PLOT ------------------------------------------------------
   ggplot(data, aes_string(x = predictor, y = response)) +
     # Points
-    geom_point(aes_string(color = color_points)) +
+    geom_point(color = color, size = 3, alpha = 0.75) +
+    # xlim(0, 100) + 
+    # ylim(0, 100) + 
+    theme_bw() + 
     
     # Line of best fit
     geom_smooth(method = "lm", color = color) +
@@ -119,8 +125,10 @@ do_hypoth3_analysis <- function(data = combined_2024_2025, predictor, response, 
     # Axes Label & Theme
     labs(x = xlabel, y = ylabel) +  # Set the y-axis label
     theme(
-      axis.title.x = element_text(color = color) # Change y-axis label color
-    ) + 
+      axis.title.y = element_text(size = 16),
+      axis.title.x = element_text(size = 16, color = color),
+      axis.text = element_text(size = 14)
+    ) +
     
     # Samples size text
     annotate(
@@ -133,26 +141,28 @@ do_hypoth3_analysis <- function(data = combined_2024_2025, predictor, response, 
       color = "black"
     ) +
     
-    # Equation and R^2 text
-    annotate(
-      "text",
-      x = max_x,
-      y = eq_y_position,
-      label = equation,
-      hjust = 1,
-      size = 4,
-      color = color
-    ) +
+    # # Equation 
+    # annotate(
+    #   "text",
+    #   x = max_x,
+    #   y = eq_y_position,
+    #   label = equation,
+    #   hjust = 1,
+    #   size = 4,
+    #   color = color
+    # ) +
+    
+    # R^2 text
     annotate(
       "text",
       x = max_x,
       y = r2_y_position,
       label = r2_text,
       hjust = 1,
-      size = 4,
+      size = 5,
       color = color,
       parse = TRUE # Ensures that italics styling works
-    ) + 
+    ) +
     # P value text
     annotate(
       "text",
@@ -160,7 +170,7 @@ do_hypoth3_analysis <- function(data = combined_2024_2025, predictor, response, 
       y = p_y_position,
       label = p_text,
       hjust = 1,
-      size = 4,
+      size = 5,
       color = color
     )
 }
@@ -190,7 +200,7 @@ patterns_across_2025_base <- do_hypoth3_analysis(
   response = "percent_live_canopy",
   xlabel = "% of Base Canker Area",
   ylabel = "% Live Canopy",
-  color = hex[3],
+  color = "#4285f4",
   color_points = "seedling_y_n"
 )
 patterns_across_2025_base
@@ -201,10 +211,38 @@ patterns_across_2025_trunk <- do_hypoth3_analysis(
   response = "percent_live_canopy",
   xlabel = "% of Trunk Canker Area",
   ylabel = "% Live Canopy",
-  color = hex[4],
+  color = "#4285f4",
   color_points = "seedling_y_n"
 )
 patterns_across_2025_trunk
+
+set.seed(123)
+
+n <- 100
+x <- runif(n, 0, 100)
+
+true_slope <- -1
+true_intercept <- 100
+noise_sd <- sqrt((1 - 0.7) / 0.7) * sd(true_slope * x)
+
+y <- true_slope * x + true_intercept + rnorm(n, mean = 0, sd = noise_sd)
+
+# Create the data frame
+synthetic_data <- data.frame(x = x, y = y)
+
+
+patterns_across_2025_trunk <- do_hypoth3_analysis(
+  data = synthetic_data, 
+  predictor = "x", 
+  response = "y",
+  xlabel = "% of Trunk Canker Area",
+  ylabel = "% Live Canopy",
+  color = "black",
+  color_points = "seedling_y_n"
+)
+patterns_across_2025_trunk
+
+
 ```
 ```{r}
 library(patchwork)
@@ -257,7 +295,7 @@ seedlings_2025
 ```{r}
 library(scales)
 
-hex <- hue_pal()(5)
+hex <- hue_pal()(3)
 
 adults_combined <- health_assess_2025 %>% filter(!is.na(dbh_cm))
 
@@ -278,8 +316,8 @@ patterns_across_adults_trunk <- do_hypoth3_analysis(
   response = "percent_live_canopy",
   xlabel = "% of Trunk Canker Area in 2025 Adults",
   ylabel = "% Live Canopy",
-  color = hex[4],
-  color_points = "seedling_y_n"
+  color = hex[2],
+  color_points = ""
 )
 patterns_across_adults_trunk
 ```
