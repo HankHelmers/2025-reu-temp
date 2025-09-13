@@ -1,0 +1,95 @@
+---
+title: "Data_Cleaning_May_2025"
+author: "Hank Helmers"
+date: "2025-08-27"
+output: html_document
+---
+
+# Data Cleaning of May Form 2025 (Dates June 5th and 6th, 2025)
+This script organized the inconsistencies across the Butternut Health Assessment data collected using the [May 2025 Version](https://docs.google.com/document/d/15MV2UUqgxR9c2eEpp-V7zLcjA9GGJhMaZdKkgN2rZSM/edit?tab=t.0#heading=h.kjmvt9c5fvdf) of the form. 
+
+The responses aligned with this version of the form are from Rows 2-17 and Dates June 5th and 6th, 2025. These are the focus of the cleaning.
+
+Below you will find the cleaning steps necessary for that version of the form
+
+```{r}
+# Remove the columns we don't use
+health_assess_2025 <- health_assess_2025 %>% select(
+  ## Basic information
+  -slope,
+  -aspect,
+  
+  ## Collections
+  -`What did you collect?`,
+  -`If VOUCHERS were collected, how many?`,
+  -`If LEAVES ON SILICA FOR DNA were collected, how many?`,
+  -`If CUTTINGS were collected, how many?`,
+  -`If SEEDS were collected, how many?`,
+  -`If other collections were made, please describe them here including the number collected.`
+)
+  
+```
+
+
+## Selecting Photos 
+```{r}
+library(lubridate)
+
+# Select between the two dates 
+data_collection_began <- ymd_hms("2025-06-05 00:00:00")
+data_collection_end <- ymd_hms("2025-06-06 23:59:59")
+
+may_2025 <- health_assess_2025 %>% filter(
+  between(Timestamp, data_collection_began, data_collection_end)
+)
+
+# Focus in on the photo columns only
+may_photos <- may_2025 %>% select( 
+  Timestamp, site_name, plant_number,  # Identifiable info
+  Camera, first_photo, last_photo      # Photo info
+)
+
+# Remove test entries
+test_entry_1 = ymd_hms("2025-06-06 15:06:31") # "EL & HH Testing"
+test_entry_2 = ymd_hms("2025-06-06 15:08:27") # "EL & HH Testing again"
+
+test_entries = c(test_entry_1, test_entry_2)
+
+may_photos <- may_photos %>% filter(Timestamp != test_entries)
+```
+
+## May 2025 Version: Photo Processing
+* Seperate the first and last photo numbers
+* Identify camera used
+* Link to the related photo album (create an artificial column)
+
+```{r}
+library(dplyr)
+
+# West_Chicago_Prairie_June_2025_fieldwork_SonyHX90V
+# seperate first, last photo and camera by '-'
+may_photos <- may_photos %>% separate(col = first_photo, into = c('first_photo', 'last_photo', 'Camera'), sep = "-")
+
+# manually inputting SonyHX90V was used based on time
+sonyH_begin_time <- ymd_hms("2025-06-05 10:07:29")
+sonyH_end_time <- ymd_hms("2025-06-06 09:37:32")
+
+# Set 'Camera' to SonyHX90V between those two time points 
+may_photos <- may_photos %>% mutate(Camera = case_when(
+  Timestamp %>% between(sonyH_begin_time, sonyH_end_time) == TRUE ~ "SonyHX90V",
+  Timestamp %>% between(sonyH_begin_time, sonyH_end_time) == FALSE ~ Camera
+))
+
+
+# manually inputting SonyRX100M4 was used based on time
+sonyR_begin_time <- ymd_hms("2025-06-06 10:28:15")
+sonyR_end_time <- ymd_hms("2025-06-06 11:41:35")
+
+may_photos <- may_photos %>% mutate(Camera = case_when(
+  Timestamp %>% between(sonyR_begin_time, sonyR_end_time) == TRUE ~ "SonyRX100M4",
+  Timestamp %>% between(sonyR_begin_time, sonyR_end_time) == FALSE ~ Camera
+))
+
+```
+
+
