@@ -61,7 +61,7 @@ may_photos <- may_photos %>% filter(Timestamp != test_entries)
 ## May 2025 Version: Photo Processing
 * Seperate the first and last photo numbers
 * Identify camera used
-* Link to the related photo album (create an artificial column)
+* Link to the related photo album (create an artificial column?)
 
 ```{r}
 library(dplyr)
