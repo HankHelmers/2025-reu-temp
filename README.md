@@ -19,7 +19,7 @@ The specific scripts written and their purpose at this time are: \data_cleaning\
 * Photo_Data_Cleaning_May_2025.Rmd
     * Script which cleans the photo data (first, last photos, and camera) from the data collected with the May Version of the health form.
 
-### [[data_exploration]()]
+### [[data_exploration](https://github.com/HankHelmers/2025-reu-temp/tree/main/data_exploration)]
 These are scripts for exploring general patterns in the data. These were created during the 2025 REU. They are messy since these were some of my first-ever R scripts, where I was learning more than I was clearly communicating.  
 
 ### [[purl](https://github.com/HankHelmers/2025-reu-temp/tree/main/purl)]
