@@ -1,0 +1,52 @@
+---
+title: "Data_Cleaning_May_2025"
+author: "Hank Helmers"
+date: "2025-08-27"
+output: html_document
+---
+
+# Data Cleaning of May 2025 
+This script organized the inconsistencies across the Butternut Health Assessment data collected using the [May 2025 Version](https://docs.google.com/document/d/15MV2UUqgxR9c2eEpp-V7zLcjA9GGJhMaZdKkgN2rZSM/edit?tab=t.0#heading=h.kjmvt9c5fvdf) of the form. 
+
+The responses aligned with this version of the form are from Rows 2-17 and Dates June 5th and 6th, 2025. These are the focus of the cleaning.
+
+Below you will find the cleaning steps necessary for that version of the form
+
+
+```{r}
+# Remove the columns we don't use
+health_assess_2025 <- health_assess_2025 %>% select(
+  ## Basic information
+  -`Slope (degree)`
+  -`Aspect (N, NE, E, etc)`
+  
+  ## Collections
+  -`What did you collect?`,
+  -`If VOUCHERS were collected, how many?`,
+  -`If LEAVES ON SILICA FOR DNA were collected, how many?`,
+  -`If CUTTINGS were collected, how many?`,
+  -`If SEEDS were collected, how many?`,
+  -`If other collections were made, please describe them here including the number collected.`
+)
+  
+```
+
+
+## Photos
+* Seperate the first and last photo numbers
+* Identify camera used
+* Link to the related photo album (create an artificial column)
+
+```{r}
+# Focus in on the photo columns only
+may_photos <- may_2025 %>% select( 
+  Timestamp, site_name, plant_number,  # Identifiable info
+  Camera, first_photo, last_photo      # Photo info
+)
+
+# Seperate first and last photo
+
+
+```
+
+
