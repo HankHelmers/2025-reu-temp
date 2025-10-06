@@ -61,15 +61,18 @@ may_photos <- may_photos %>% filter(Timestamp != test_entries)
 ## May 2025 Version: Photo Processing
 * Seperate the first and last photo numbers
 * Identify camera used
-* Link to the related photo album (create an artificial column?)
+* Link to the related photo album (create an artificial column)
 
 ```{r}
 library(dplyr)
 
 # West_Chicago_Prairie_June_2025_fieldwork_SonyHX90V
-# seperate first, last photo and camera by '-'
+# In this version of the form, all the camera information was in a single input field.
+# So, we needed to seperate first, last photo and camera by '-':
 may_photos <- may_photos %>% separate(col = first_photo, into = c('first_photo', 'last_photo', 'Camera'), sep = "-")
 
+# Some were missing the camera, but we know from checking the photos that they are 
+# on this camera: 
 # manually inputting SonyHX90V was used based on time
 sonyH_begin_time <- ymd_hms("2025-06-05 10:07:29")
 sonyH_end_time <- ymd_hms("2025-06-06 09:37:32")

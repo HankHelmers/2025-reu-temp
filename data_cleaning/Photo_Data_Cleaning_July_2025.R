@@ -4,8 +4,8 @@ library(lubridate)
 # This script organized the inconsistencies across the Butternut Health Assessment data 
 #
 # The responses aligned with the JUNE Version of the form
-# Dates June 12th to July 2nd, 2025 EOD. 
-# Rows: 18 – 71 
+# Dates July 3rd to August 6th EOD. (All the photos through August data collection)
+# Rows: 73-174 
 
 
 # 1. Import
@@ -29,26 +29,19 @@ health_assess_2025 <- health_assess_2025 %>% select(
 
 # 3. Select between the two dates of data collected with this version of the form
 #    (June 2025 Version)
-data_collection_began <- ymd_hms("2025-06-12 00:00:00")
-data_collection_end <- ymd_hms("2025-07-02 23:59:59")
+data_collection_began <- ymd_hms("2025-07-03 00:00:00") #7/3/2025 8:38:24
+data_collection_end <- ymd_hms("2025-08-06 23:59:59")   # 8/6/2025 15:38:19
 
-june_2025 <- health_assess_2025 %>% filter(
+july_2025 <- health_assess_2025 %>% filter(
   between(Timestamp, data_collection_began, data_collection_end)
 )
 
 # Focus in on the photo columns only
-june_photos <- june_2025 %>% select( 
+july_2025 <- july_2025 %>% select( 
   Timestamp, site_name, plant_number,  # Identifiable info
   Camera, first_photo, last_photo      # Photo info
 )
 
-# Remove test entries & black walnut entry
-test_entry_1 = ymd_hms("2025-07-02 09:41:40") # "Fake site - practice entry"
-black_walnut = ymd_hms("2025-06-19 10:46:22") # "this is black walnut!"
-
-test_entries = c(test_entry_1, black_walnut)
-
-june_photos <- june_photos %>% filter(Timestamp != test_entries)
 
 # 4. Specialized cleaning for this time period
 #   a. Combining seperate SH37 observations into a single photo group
@@ -57,31 +50,12 @@ june_photos <- june_photos %>% filter(Timestamp != test_entries)
 #      concerned, there is only one set of photos. 
 #      
 #      In this case, simply removing the other two entries is the simplest option.
-june_photos <- june_photos %>% filter(plant_number != "SH37")
 
+# Remove test entries & black walnut entry
+test_entry_1 = ymd_hms("2025-08-06 15:31:37") # "Test entry"
+test_entry_2 = ymd_hms("2025-08-06 15:38:19") # "Test entry"
 
-#   b. Seperating the camera from the first photo information
-june_photos <- june_photos %>% mutate(mixed_data = first_photo)
+test_entries = c(test_entry_1, test_entry_2)
 
-# Seperate the camera
-df_separated <- june_photos %>% separate_rows(mixed_data, sep=" ")
-
-# Step 3: Classify pieces
-df_classified <- df_separated %>%
-  mutate(
-    Camera = if_else(str_detect(mixed_data, "^[0-9]+$"), NA_character_, mixed_data),
-    first_photo = if_else(str_detect(mixed_data, "^[0-9]+$"), mixed_data, NA_character_)
-  )
-
-# Step 4: Recombine by last_photo
-df_cleaned <- df_classified %>%
-  group_by(plant_number) %>%
-  summarise(
-    Camera      = str_c(na.omit(Camera), collapse = " "),
-    first_photo = str_c(na.omit(first_photo), collapse = " "),
-  )
-
-
-df_cleaned <- left_join(df_cleaned, june_photos, by = "plant_number")
-
+july_2025 <- july_2025 %>% filter(Timestamp != test_entries)
 
