@@ -23,6 +23,16 @@ health_assess_2025 <- health_assess_2025 %>% select(1:60)
 ## Renaming columns for readability & clarity
 
 ### basic information
+
+# Timestamp 
+health_assess_2025 <- health_assess_2025 %>% rename(timestamp = `Timestamp`)
+
+# Email
+health_assess_2025 <- health_assess_2025 %>% rename(email = `Email Address`)
+
+# Date
+health_assess_2025 <- health_assess_2025 %>% rename(date = `Date`)
+
 # Site Name
 health_assess_2025 <- health_assess_2025 %>% rename(site_name = `Site Number or Initial: JC-W-_______`)
 
@@ -44,7 +54,10 @@ health_assess_2025 <- health_assess_2025 %>% rename(slope = `Slope (degree)`)
 # aspect
 health_assess_2025 <- health_assess_2025 %>% rename(aspect = `Aspect (N, NE, E, etc)`)
 
-# Plant Height (ft)
+# upland_rip
+health_assess_2025 <- health_assess_2025 %>% rename(upland_rip = `Riparian or upland?`)
+
+# plant_height_ft
 health_assess_2025 <- health_assess_2025 %>% rename(plant_height_ft = `Plant Height (in FEET)`)
 
 # DBH
@@ -65,6 +78,12 @@ health_assess_2025 <- health_assess_2025 %>% rename(seedling_y_n = `Is this indi
 health_assess_2025 <- health_assess_2025 %>% rename(first_photo = `Number of the 1st photo taken`)
 
 health_assess_2025 <- health_assess_2025 %>% rename(last_photo = `Number of the last photo taken`)
+
+health_assess_2025 <- health_assess_2025 %>% rename(camera = `Camera`)
+
+# notes
+health_assess_2025 <- health_assess_2025 %>% rename(additional_notes = `Any additional notes?`)
+
 
 ### Seeds
 # Producing seeds
@@ -111,6 +130,8 @@ health_assess_2025 <- health_assess_2025 %>% rename(densio_east = East)
 # densio_west 
 health_assess_2025 <- health_assess_2025 %>% rename(densio_west = West)
 
+
+
 ### Categorical (purdue ratings, hybrid characters, competition, damage)
 # crown class
 health_assess_2025 <- health_assess_2025 %>% rename(crown_class = `What is the crown class of this individual?`)
@@ -145,6 +166,9 @@ health_assess_2025 <- health_assess_2025 %>% rename(signs_of_damage_seedling = `
 # signs_of_damage_trees
 health_assess_2025 <- health_assess_2025 %>% rename(signs_of_damage_trees = `Does this tree show any signs of any of the following?`)
 
+
+
+
 # Removal of unused questions 
 health_assess_2025 <- health_assess_2025 %>% select(
   ## Bark phenotypes
@@ -153,7 +177,7 @@ health_assess_2025 <- health_assess_2025 %>% select(
 )
 
 # Convert Timestamp data to the 'Date' data type
-health_assess_2025 <- health_assess_2025 %>% mutate(Timestamp = mdy_hms(Timestamp))
+health_assess_2025 <- health_assess_2025 %>% mutate(timestamp = mdy_hms(timestamp))
 
 
 # Print out renaming
